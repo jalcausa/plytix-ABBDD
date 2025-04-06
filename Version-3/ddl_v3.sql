@@ -1,7 +1,7 @@
 CREATE TABLE activo (
     id        INTEGER NOT NULL,
     nombre    VARCHAR2(50) NOT NULL,
-    tamaño    INTEGER NOT NULL,
+    tamanio    INTEGER NOT NULL,
     tipo      VARCHAR2(50),
     url       VARCHAR2(100),
     cuenta_id INTEGER NOT NULL
