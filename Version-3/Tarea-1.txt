@@ -3,6 +3,8 @@
 -- Posteriormente, se solicita que le asignemos el tablespace TS_PLYTIX.
 -------------------------------------------------------------------------------
 -- Creación de PLYTIX y asignación de cuota suficiente
+-- Si no está creado el tablespace, crearlo:
+-- CREATE TABLESPACE TS_PLYTIX DATAFILE 'ts_plytix.dbf' SIZE 100M AUTOEXTEND ON;
 CREATE USER PLYTIX IDENTIFIED BY "Febrero.2025";
 ALTER USER PLYTIX DEFAULT TABLESPACE TS_PLYTIX QUOTA 100M ON TS_PLYTIX;
 
@@ -20,6 +22,7 @@ CREATE TABLESPACE TS_INDICES DATAFILE 'ts_indices.dbf' SIZE 50M AUTOEXTEND ON;
 ALTER USER PLYTIX QUOTA 50M ON TS_INDICES;
 
 -- Consultar que existen los tablespaces TS_PLYTIX y TS_INDICES
+-- Como system:
 SELECT TABLESPACE_NAME
 FROM DBA_DATA_FILES
 WHERE (TABLESPACE_NAME = 'TS_PLYTIX' OR TABLESPACE_NAME = 'TS_INDICES');
@@ -321,7 +324,7 @@ ALTER TABLE atributo
 -- origen y destino
 
 -- EJERCICIO 4 ----------------------------------------------------------------
--- SYSTEM ---------------------------------------------------------------------
+-- Como SYSTEM ---------------------------------------------------------------------
 create or replace directory directorio_ext as 'C:\app\alumnos\admin\orcl\dpdump';
 grant read, write on directory directorio_ext to PLYTIX;
 -------------------------------------------------------------------------------
