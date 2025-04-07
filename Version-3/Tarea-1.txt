@@ -357,6 +357,18 @@ ORGANIZATION EXTERNAL (
     )
     LOCATION ('productos.csv')
 );
+
+-- Si intentamos hacer un insert obtenemos el siguiente error:
+-- Error en la línea de comandos : 3 Columna : 13
+-- Informe de error -
+-- Error SQL: ORA-30657: operación no soportada en la tabla externa organizada
+-- 30657.0000 -  "operation not supported on external organized table"
+-- *Cause:    User attempted on operation on an external table which is
+--           not supported.
+-- *Action:   Don't do that!
+
+-- No se pueden ni insertar ni modificar datos de una tabla externa así
+-- ya que una tabla externa lo único que hace es leer un archivo determinado
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
 
