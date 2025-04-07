@@ -4,7 +4,7 @@
 -------------------------------------------------------------------------------
 -- Creación de PLYTIX y asignación de cuota suficiente
 -- Si no está creado el tablespace, crearlo:
--- CREATE TABLESPACE TS_PLYTIX DATAFILE 'ts_plytix.dbf' SIZE 100M AUTOEXTEND ON;
+CREATE TABLESPACE TS_PLYTIX DATAFILE 'ts_plytix.dbf' SIZE 100M AUTOEXTEND ON;
 CREATE USER PLYTIX IDENTIFIED BY "Febrero.2025";
 ALTER USER PLYTIX DEFAULT TABLESPACE TS_PLYTIX QUOTA 100M ON TS_PLYTIX;
 
