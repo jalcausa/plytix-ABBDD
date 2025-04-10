@@ -408,7 +408,7 @@ WHERE (index_name IN ('EMAIL_IDX', 'NOMBRECOMPLETO_IDX', 'NOMBREUSUARIO_IDX'));
 -- EJERCICIO 6 ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 CREATE MATERIALIZED VIEW VM_PRODUCTO
-REFRESH FORCE
+REFRESH COMPLETE
 START WITH SYSDATE NEXT TRUNC(SYSDATE) + 1
 AS SELECT * FROM PRODUCTO_EXT; 
 
