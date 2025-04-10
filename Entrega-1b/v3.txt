@@ -1,3 +1,8 @@
+--COMO SYSTEM
+CREATE ROLE R_USER_STD;
+CREATE ROLE R_GESTOR_CUENTA;
+CREATE ROLE R_PLANIFICADOR_SERVICIOS;
+
 // Para administrador del sistema tenemos al usuario PLYTIX, propietario de todas las tablas
 -- USUARIO ESTÁNDAR
 --Acceso a USUARIO (Usando una vista)
