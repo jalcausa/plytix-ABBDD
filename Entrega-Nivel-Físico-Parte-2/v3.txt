@@ -1,0 +1,1018 @@
+--COMO SYSTEM
+
+
+CREATE ROLE R_USER_STD;
+CREATE ROLE R_GESTOR_CUENTA;
+CREATE ROLE R_PLANIFICADOR_SERVICIOS;
+
+
+-- ADMINISTRADOR DEL SISTEMA:
+-- Como administrador del sistema tenemos al usuario PLYTIX, propietario de todas las tablas
+
+
+
+-- USUARIO ESTÁNDAR
+
+
+
+--Acceso a USUARIO (Usando una vista)
+
+
+CREATE OR REPLACE VIEW V_USUARIO AS 
+SELECT * FROM USUARIO WHERE UPPER(USUARIO.NOMBREUSUARIO)=USER
+WITH CHECK OPTION;
+
+CREATE PUBLIC SYNONYM MI_USUARIO FOR V_USUARIO;
+
+GRANT SELECT, UPDATE(NOMBRECOMPLETO, AVATAR, EMAIL, TELEFONO) ON V_USUARIO
+TO R_USER_STD;
+
+
+
+--Acceso a PRODUCTO (usando una vista y triggers en el ejercicio 1 para el CRUD)
+
+
+-- Hasta que no se crean los triggers no se puede hacer el grant al role
+CREATE OR REPLACE VIEW V_PRODUCTO_STD AS 
+SELECT GTIN, SKU, NOMBRE, MINIATURA, TEXTOCORTO, CREADO, MODIFICADO 
+FROM PRODUCTO
+WHERE PRODUCTO.CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO);
+
+CREATE OR REPLACE PUBLIC SYNONYM MIS_PRODUCTOS FOR V_PRODUCTO_STD;
+
+
+--Acceso a ACTIVO (usando una vista y triggers en el ejercicio 1 para el CRUD)
+
+
+CREATE OR REPLACE VIEW V_ACTIVO_STD AS 
+SELECT ID, NOMBRE, TAMANIO, TIPO, URL
+FROM ACTIVO
+WHERE ACTIVO.CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)
+WITH CHECK OPTION;
+
+CREATE PUBLIC SYNONYM MIS_ACTIVOS FOR V_ACTIVO_STD;
+
+
+--Acceso a ATRIBUTO (Usando políticas de seguridad):
+
+
+-- Función de política
+CREATE OR REPLACE FUNCTION SOLO_USER_ATRIB(
+    p_schema IN VARCHAR2,
+    p_object IN VARCHAR2
+) RETURN VARCHAR2 AS
+BEGIN
+    RETURN 'CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)';
+END SOLO_USER_ATRIB;
+/
+-- Como SYS si no se ha hecho ya:
+-- GRANT EXECUTE ON DBMS_RLS TO PLYTIX
+-- Aplicar la política de seguridad
+-- Para borrar la política:
+/*
+BEGIN
+  DBMS_RLS.DROP_POLICY(
+    OBJECT_SCHEMA => 'PLYTIX',
+    OBJECT_NAME   => 'ATRIBUTO',
+    POLICY_NAME   => 'POL_SOLO_USER_ATRIB'
+  );
+END;
+/
+*/
+BEGIN
+  DBMS_RLS.ADD_POLICY(
+    OBJECT_SCHEMA   => 'PLYTIX',
+    OBJECT_NAME     => 'ATRIBUTO',
+    POLICY_NAME     => 'POL_SOLO_USER_ATRIB',
+    FUNCTION_SCHEMA => 'PLYTIX',
+    POLICY_FUNCTION => 'SOLO_USER_ATRIB',
+    STATEMENT_TYPES => 'SELECT, UPDATE, DELETE'
+  );
+END;
+/
+// Hacer trigger para el insert, con VPD no se puede
+
+CREATE OR REPLACE TRIGGER verificar_cuenta_id
+BEFORE INSERT ON atributo
+FOR EACH ROW
+DECLARE
+    v_count NUMBER;
+BEGIN
+    -- Verificar que el CUENTA_ID del registro a insertar existe en V_USUARIO
+    SELECT COUNT(*)
+    INTO v_count
+    FROM V_USUARIO
+    WHERE CUENTA_ID = :NEW.CUENTA_ID;
+
+    -- Si no existe, lanzamos una excepción
+    IF v_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'El CUENTA_ID no es válido o no pertenece al usuario.');
+    END IF;
+END verificar_cuenta_id;
+/
+
+
+-- GESTOR DE CUENTAS
+
+
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON CUENTA TO R_GESTOR_CUENTA;
+
+
+
+-- PLANIFICADOR DE SERVICIOS
+GRANT SELECT, INSERT, UPDATE, DELETE ON PLAN TO R_PLANIFICADOR_SERVICIOS;
+
+
+
+-- EJERCICIO 1a
+
+
+
+-- Creamos triggers INSTEAD OF para manejar las operaciones DML sobre PRODUCTO
+CREATE OR REPLACE TRIGGER trg_v_producto_std_insert
+INSTEAD OF INSERT ON V_PRODUCTO_STD
+FOR EACH ROW
+DECLARE
+  v_cuenta_id NUMBER;
+BEGIN
+  -- Obtenemos la cuenta_id del usuario actual
+  SELECT CUENTA_ID INTO v_cuenta_id FROM V_USUARIO WHERE ROWNUM = 1;
+  
+  -- Insertamos en la tabla base con la cuenta_id del usuario actual
+  INSERT INTO PRODUCTO (GTIN, SKU, NOMBRE, MINIATURA, TEXTOCORTO, CREADO, MODIFICADO, CUENTA_ID)
+  VALUES (:NEW.GTIN, :NEW.SKU, :NEW.NOMBRE, :NEW.MINIATURA, :NEW.TEXTOCORTO, 
+          :NEW.CREADO, :NEW.MODIFICADO, v_cuenta_id);
+END;
+/
+
+CREATE OR REPLACE TRIGGER trg_v_producto_std_update
+INSTEAD OF UPDATE ON V_PRODUCTO_STD
+FOR EACH ROW
+BEGIN
+  UPDATE PRODUCTO
+  SET GTIN = :NEW.GTIN,
+      SKU = :NEW.SKU,
+      NOMBRE = :NEW.NOMBRE,
+      MINIATURA = :NEW.MINIATURA,
+      TEXTOCORTO = :NEW.TEXTOCORTO,
+      MODIFICADO = :NEW.MODIFICADO
+  WHERE GTIN = :OLD.GTIN
+  AND CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO);
+END;
+/
+
+CREATE OR REPLACE TRIGGER trg_v_producto_std_delete
+INSTEAD OF DELETE ON V_PRODUCTO_STD
+FOR EACH ROW
+BEGIN
+  DELETE FROM PRODUCTO
+  WHERE GTIN = :OLD.GTIN
+  AND CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO);
+END;
+/
+
+-- Ahora sí podemos asignar todos los permisos CRUD al rol
+GRANT SELECT, INSERT, UPDATE, DELETE ON V_PRODUCTO_STD TO R_USER_STD;
+
+
+
+-- EJERCICIO 1b
+
+
+
+ALTER TABLE PRODUCTO ADD PUBLICO CHAR(1) DEFAULT 'S';
+
+
+
+-- EJERCICIO 1c
+
+
+
+CREATE OR REPLACE VIEW V_PRODUCTO_PUBLICO AS
+SELECT * FROM PRODUCTO
+WHERE PUBLICO = 'S';
+
+GRANT SELECT ON V_PRODUCTO_PUBLICO TO PUBLIC;
+
+
+
+-- EJERCICIO 1d
+
+
+
+-- Creamos triggers INSTEAD OF para manejar las operaciones DML sobre ACTIVO
+-- Trigger para INSERT en V_ACTIVO_STD
+CREATE OR REPLACE TRIGGER trg_v_activo_std_insert
+INSTEAD OF INSERT ON V_ACTIVO_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO 
+    WHERE ROWNUM = 1;
+    
+    -- Insertar en la tabla base con la cuenta_id del usuario actual
+    INSERT INTO ACTIVO (ID, NOMBRE, TAMANIO, TIPO, URL, CUENTA_ID)
+    VALUES (:NEW.ID, :NEW.NOMBRE, :NEW.TAMANIO, :NEW.TIPO, :NEW.URL, v_cuenta_id);
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20011, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+-- Trigger para UPDATE en V_ACTIVO_STD
+CREATE OR REPLACE TRIGGER trg_v_activo_std_update
+INSTEAD OF UPDATE ON V_ACTIVO_STD
+FOR EACH ROW
+BEGIN
+    UPDATE ACTIVO
+    SET NOMBRE = :NEW.NOMBRE,
+        TAMANIO = :NEW.TAMANIO,
+        TIPO = :NEW.TIPO,
+        URL = :NEW.URL
+    WHERE ID = :OLD.ID
+    AND CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO);
+END;
+/
+
+-- Trigger para DELETE en V_ACTIVO_STD
+CREATE OR REPLACE TRIGGER trg_v_activo_std_delete
+INSTEAD OF DELETE ON V_ACTIVO_STD
+FOR EACH ROW
+BEGIN
+    DELETE FROM ACTIVO
+    WHERE ID = :OLD.ID
+    AND CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO);
+END;
+/
+
+-- Asignar permisos CRUD sobre la vista de activos
+GRANT SELECT, INSERT, UPDATE, DELETE ON V_ACTIVO_STD TO R_USER_STD;
+
+
+-- Vista para gestionar la relación entre Activos y Categorías de Activos
+CREATE OR REPLACE VIEW V_ACTIVO_CATEGORIA_STD AS
+SELECT ACA.*
+FROM ACTIVO_CATEGORIA_ACTIVO ACA
+WHERE ACA.ACTIVO_CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)
+  AND ACA.CAT_ACT_CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)
+WITH CHECK OPTION;
+
+-- Crear sinónimo público
+CREATE PUBLIC SYNONYM MIS_ACTIVOS_CATEGORIAS FOR V_ACTIVO_CATEGORIA_STD;
+
+-- TRIGGERS para CRUD en la vista ACTIVO_CATEGORIA_STD
+-- Trigger para INSERT en V_ACTIVO_CATEGORIA_STD
+CREATE OR REPLACE TRIGGER trg_v_activo_cat_std_insert
+INSTEAD OF INSERT ON V_ACTIVO_CATEGORIA_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+    v_activo_existe NUMBER;
+    v_cat_existe NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO 
+    WHERE ROWNUM = 1;
+    
+    -- Verificar que el activo pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_activo_existe
+    FROM ACTIVO
+    WHERE ID = :NEW.ACTIVO_ID
+    AND CUENTA_ID = v_cuenta_id;
+    
+    -- Verificar que la categoría pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_cat_existe
+    FROM CATEGORIA_ACTIVO
+    WHERE ID = :NEW.CAT_ACT_ID
+    AND CUENTA_ID = v_cuenta_id;
+    
+    IF v_activo_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20012, 'El activo no pertenece a su cuenta');
+    END IF;
+    
+    IF v_cat_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20013, 'La categoría no pertenece a su cuenta');
+    END IF;
+    
+    -- Insertar la relación
+    INSERT INTO ACTIVO_CATEGORIA_ACTIVO (
+        ACTIVO_ID, ACTIVO_CUENTA_ID, 
+        CAT_ACT_ID, CAT_ACT_CUENTA_ID
+    ) VALUES (
+        :NEW.ACTIVO_ID, v_cuenta_id, 
+        :NEW.CAT_ACT_ID, v_cuenta_id
+    );
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20011, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+-- Trigger para UPDATE en V_ACTIVO_CATEGORIA_STD
+CREATE OR REPLACE TRIGGER trg_v_activo_cat_std_update
+INSTEAD OF UPDATE ON V_ACTIVO_CATEGORIA_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+    v_activo_existe NUMBER;
+    v_cat_existe NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO 
+    WHERE ROWNUM = 1;
+    
+    -- Verificar que el nuevo activo pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_activo_existe
+    FROM ACTIVO
+    WHERE ID = :NEW.ACTIVO_ID
+    AND CUENTA_ID = v_cuenta_id;
+    
+    -- Verificar que la nueva categoría pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_cat_existe
+    FROM CATEGORIA_ACTIVO
+    WHERE ID = :NEW.CAT_ACT_ID
+    AND CUENTA_ID = v_cuenta_id;
+    
+    IF v_activo_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20012, 'El nuevo activo no pertenece a su cuenta');
+    END IF;
+    
+    IF v_cat_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20013, 'La nueva categoría no pertenece a su cuenta');
+    END IF;
+    
+    -- Actualizar la relación
+    UPDATE ACTIVO_CATEGORIA_ACTIVO
+    SET ACTIVO_ID = :NEW.ACTIVO_ID,
+        ACTIVO_CUENTA_ID = v_cuenta_id,
+        CAT_ACT_ID = :NEW.CAT_ACT_ID,
+        CAT_ACT_CUENTA_ID = v_cuenta_id
+    WHERE ACTIVO_ID = :OLD.ACTIVO_ID
+    AND ACTIVO_CUENTA_ID = :OLD.ACTIVO_CUENTA_ID
+    AND CAT_ACT_ID = :OLD.CAT_ACT_ID
+    AND CAT_ACT_CUENTA_ID = :OLD.CAT_ACT_CUENTA_ID
+    AND ACTIVO_CUENTA_ID = v_cuenta_id;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20011, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+-- Trigger para DELETE en V_ACTIVO_CATEGORIA_STD
+CREATE OR REPLACE TRIGGER trg_v_activo_cat_std_delete
+INSTEAD OF DELETE ON V_ACTIVO_CATEGORIA_STD
+FOR EACH ROW
+BEGIN
+    DELETE FROM ACTIVO_CATEGORIA_ACTIVO
+    WHERE ACTIVO_ID = :OLD.ACTIVO_ID
+    AND ACTIVO_CUENTA_ID = :OLD.ACTIVO_CUENTA_ID
+    AND CAT_ACT_ID = :OLD.CAT_ACT_ID
+    AND CAT_ACT_CUENTA_ID = :OLD.CAT_ACT_CUENTA_ID
+    AND ACTIVO_CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO);
+END;
+/
+
+-- Asignar permisos CRUD sobre la vista de relación activos-categorías
+GRANT SELECT, INSERT, UPDATE, DELETE ON V_ACTIVO_CATEGORIA_STD TO R_USER_STD;
+
+-- Modificar el trigger TR_PRODUCTOS:
+CREATE OR REPLACE TRIGGER TR_PRODUCTOS
+BEFORE INSERT ON PRODUCTO FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+BEGIN
+    -- Asignación automática de GTIN si es nulo
+    IF :new.GTIN IS NULL THEN
+        :new.GTIN := SEQ_PRODUCTOS.NEXTVAL;
+    END IF;
+    
+    -- Asignación automática de CUENTA_ID
+    IF :new.CUENTA_ID IS NULL THEN
+        -- Obtener CUENTA_ID del usuario actual
+        BEGIN
+            SELECT CUENTA_ID 
+            INTO v_cuenta_id 
+            FROM USUARIO 
+            WHERE UPPER(NOMBREUSUARIO) = USER;
+            
+            :new.CUENTA_ID := v_cuenta_id;
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                RAISE_APPLICATION_ERROR(-20010, 'Usuario actual no tiene una cuenta asociada');
+        END;
+    END IF;
+END TR_PRODUCTOS;
+/
+
+
+
+-- EJERCICIO 1e
+
+
+
+-- Vista para categorías del usuario actual
+CREATE OR REPLACE VIEW V_CATEGORIA_STD AS
+SELECT ID, NOMBRE
+FROM CATEGORIA
+WHERE CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)
+WITH CHECK OPTION;
+
+-- Crear sinónimo público para fácil acceso
+CREATE PUBLIC SYNONYM MIS_CATEGORIAS FOR V_CATEGORIA_STD;
+
+
+-- Trigger para INSERT en V_CATEGORIA_STD
+CREATE OR REPLACE TRIGGER trg_v_categoria_std_insert
+INSTEAD OF INSERT ON V_CATEGORIA_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO 
+    WHERE ROWNUM = 1;
+    
+    -- Insertar en la tabla base con la cuenta_id del usuario actual
+    INSERT INTO CATEGORIA (ID, NOMBRE, CUENTA_ID)
+    VALUES (:NEW.ID, :NEW.NOMBRE, v_cuenta_id);
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20021, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+-- Trigger para UPDATE en V_CATEGORIA_STD
+CREATE OR REPLACE TRIGGER trg_v_categoria_std_update
+INSTEAD OF UPDATE ON V_CATEGORIA_STD
+FOR EACH ROW
+BEGIN
+    UPDATE CATEGORIA
+    SET NOMBRE = :NEW.NOMBRE
+    WHERE ID = :OLD.ID
+    AND CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO);
+END;
+/
+
+-- Trigger para DELETE en V_CATEGORIA_STD
+CREATE OR REPLACE TRIGGER trg_v_categoria_std_delete
+INSTEAD OF DELETE ON V_CATEGORIA_STD
+FOR EACH ROW
+BEGIN
+    DELETE FROM CATEGORIA
+    WHERE ID = :OLD.ID
+    AND CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO);
+END;
+/
+
+
+-- Vista para relación entre productos y categorías del usuario actual
+CREATE OR REPLACE VIEW V_PRODUCTO_CATEGORIA_STD AS
+SELECT PC.PRODUCTO_GTIN, PC.CATEGORIA_ID
+FROM PRODUCTO_CATEGORIA PC
+WHERE PC.PRODUCTO_CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)
+  AND PC.CATEGORIA_CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)
+WITH CHECK OPTION;
+
+-- Crear sinónimo público
+CREATE PUBLIC SYNONYM MIS_PRODUCTOS_CATEGORIAS FOR V_PRODUCTO_CATEGORIA_STD;
+
+
+-- Trigger para INSERT en V_PRODUCTO_CATEGORIA_STD
+CREATE OR REPLACE TRIGGER trg_v_prod_cat_std_insert
+INSTEAD OF INSERT ON V_PRODUCTO_CATEGORIA_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+    v_prod_existe NUMBER;
+    v_cat_existe NUMBER;
+    v_ya_tiene_cat NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO 
+    WHERE ROWNUM = 1;
+    
+    -- Verificar que el producto pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_prod_existe
+    FROM PRODUCTO
+    WHERE GTIN = :NEW.PRODUCTO_GTIN
+    AND CUENTA_ID = v_cuenta_id;
+    
+    -- Verificar que la categoría pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_cat_existe
+    FROM CATEGORIA
+    WHERE ID = :NEW.CATEGORIA_ID
+    AND CUENTA_ID = v_cuenta_id;
+    
+    -- Verificar si el producto ya tiene una categoría asignada
+    SELECT COUNT(*) INTO v_ya_tiene_cat
+    FROM PRODUCTO_CATEGORIA
+    WHERE PRODUCTO_GTIN = :NEW.PRODUCTO_GTIN
+    AND PRODUCTO_CUENTA_ID = v_cuenta_id;
+    
+    IF v_prod_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20022, 'El producto no pertenece a su cuenta');
+    END IF;
+    
+    IF v_cat_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20023, 'La categoría no pertenece a su cuenta');
+    END IF;
+    
+    IF v_ya_tiene_cat > 0 THEN
+        RAISE_APPLICATION_ERROR(-20024, 'El producto ya tiene una categoría asignada. Debe eliminarla primero.');
+    END IF;
+    
+    -- Insertar la relación
+    INSERT INTO PRODUCTO_CATEGORIA (
+        PRODUCTO_GTIN, PRODUCTO_CUENTA_ID, 
+        CATEGORIA_ID, CATEGORIA_CUENTA_ID
+    ) VALUES (
+        :NEW.PRODUCTO_GTIN, v_cuenta_id, 
+        :NEW.CATEGORIA_ID, v_cuenta_id
+    );
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20021, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+-- Trigger para UPDATE en V_PRODUCTO_CATEGORIA_STD
+CREATE OR REPLACE TRIGGER trg_v_prod_cat_std_update
+INSTEAD OF UPDATE ON V_PRODUCTO_CATEGORIA_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+    v_prod_existe NUMBER;
+    v_cat_existe NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO 
+    WHERE ROWNUM = 1;
+    
+    -- Verificar que el producto pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_prod_existe
+    FROM PRODUCTO
+    WHERE GTIN = :NEW.PRODUCTO_GTIN
+    AND CUENTA_ID = v_cuenta_id;
+    
+    -- Verificar que la categoría pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_cat_existe
+    FROM CATEGORIA
+    WHERE ID = :NEW.CATEGORIA_ID
+    AND CUENTA_ID = v_cuenta_id;
+    
+    IF v_prod_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20022, 'El producto no pertenece a su cuenta');
+    END IF;
+    
+    IF v_cat_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20023, 'La categoría no pertenece a su cuenta');
+    END IF;
+    
+    -- Actualizar la relación
+    UPDATE PRODUCTO_CATEGORIA
+    SET CATEGORIA_ID = :NEW.CATEGORIA_ID,
+        CATEGORIA_CUENTA_ID = v_cuenta_id
+    WHERE PRODUCTO_GTIN = :OLD.PRODUCTO_GTIN
+    AND PRODUCTO_CUENTA_ID = v_cuenta_id;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20021, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+-- Trigger para DELETE en V_PRODUCTO_CATEGORIA_STD
+CREATE OR REPLACE TRIGGER trg_v_prod_cat_std_delete
+INSTEAD OF DELETE ON V_PRODUCTO_CATEGORIA_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO;
+    
+    -- Eliminar la relación
+    DELETE FROM PRODUCTO_CATEGORIA
+    WHERE PRODUCTO_GTIN = :OLD.PRODUCTO_GTIN
+    AND PRODUCTO_CUENTA_ID = v_cuenta_id
+    AND CATEGORIA_ID = :OLD.CATEGORIA_ID
+    AND CATEGORIA_CUENTA_ID = v_cuenta_id;
+END;
+/
+
+
+-- Asignar permisos CRUD sobre la vista de categorías
+GRANT SELECT, INSERT, UPDATE, DELETE ON V_CATEGORIA_STD TO R_USER_STD;
+
+-- Asignar permisos CRUD sobre la vista de relación productos-categorías
+GRANT SELECT, INSERT, UPDATE, DELETE ON V_PRODUCTO_CATEGORIA_STD TO R_USER_STD;
+
+
+
+-- EJERCICIO 1e
+
+
+
+-- Vista para relaciones entre productos del usuario actual
+CREATE OR REPLACE VIEW V_RELACIONADO_STD AS
+SELECT R.NOMBRE, R.SENTIDO, 
+       R.PRODUCTO_GTIN, R.PRODUCTO_GTIN1
+FROM RELACIONADO R
+WHERE R.PRODUCTO_CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)
+  AND R.PRODUCTO_CUENTA_ID1 IN (SELECT CUENTA_ID FROM V_USUARIO)
+WITH CHECK OPTION;
+
+-- Crear sinónimo público
+CREATE PUBLIC SYNONYM MIS_PRODUCTOS_RELACIONADOS FOR V_RELACIONADO_STD;
+
+
+-- Trigger para INSERT en V_RELACIONADO_STD
+CREATE OR REPLACE TRIGGER trg_v_relacionado_std_insert
+INSTEAD OF INSERT ON V_RELACIONADO_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+    v_prod1_existe NUMBER;
+    v_prod2_existe NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO 
+    WHERE ROWNUM = 1;
+    
+    -- Verificar que el primer producto pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_prod1_existe
+    FROM PRODUCTO
+    WHERE GTIN = :NEW.PRODUCTO_GTIN
+    AND CUENTA_ID = v_cuenta_id;
+    
+    -- Verificar que el segundo producto pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_prod2_existe
+    FROM PRODUCTO
+    WHERE GTIN = :NEW.PRODUCTO_GTIN1
+    AND CUENTA_ID = v_cuenta_id;
+    
+    IF v_prod1_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20031, 'El primer producto no pertenece a su cuenta');
+    END IF;
+    
+    IF v_prod2_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20032, 'El segundo producto no pertenece a su cuenta');
+    END IF;
+    
+    -- Evitar relacionar un producto consigo mismo
+    IF :NEW.PRODUCTO_GTIN = :NEW.PRODUCTO_GTIN1 THEN
+        RAISE_APPLICATION_ERROR(-20033, 'No se puede relacionar un producto consigo mismo');
+    END IF;
+    
+    -- Insertar la relación
+    INSERT INTO RELACIONADO (
+        NOMBRE, SENTIDO,
+        PRODUCTO_GTIN, PRODUCTO_CUENTA_ID, 
+        PRODUCTO_GTIN1, PRODUCTO_CUENTA_ID1
+    ) VALUES (
+        :NEW.NOMBRE, :NEW.SENTIDO,
+        :NEW.PRODUCTO_GTIN, v_cuenta_id, 
+        :NEW.PRODUCTO_GTIN1, v_cuenta_id
+    );
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+-- Trigger para UPDATE en V_RELACIONADO_STD
+CREATE OR REPLACE TRIGGER trg_v_relacionado_std_update
+INSTEAD OF UPDATE ON V_RELACIONADO_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+    v_prod1_existe NUMBER;
+    v_prod2_existe NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO 
+    WHERE ROWNUM = 1;
+    
+    -- Si están cambiando los productos relacionados, verificar que pertenecen a la cuenta
+    IF :NEW.PRODUCTO_GTIN != :OLD.PRODUCTO_GTIN OR :NEW.PRODUCTO_GTIN1 != :OLD.PRODUCTO_GTIN1 THEN
+        -- Verificar que el primer producto pertenece a la cuenta del usuario
+        SELECT COUNT(*) INTO v_prod1_existe
+        FROM PRODUCTO
+        WHERE GTIN = :NEW.PRODUCTO_GTIN
+        AND CUENTA_ID = v_cuenta_id;
+        
+        -- Verificar que el segundo producto pertenece a la cuenta del usuario
+        SELECT COUNT(*) INTO v_prod2_existe
+        FROM PRODUCTO
+        WHERE GTIN = :NEW.PRODUCTO_GTIN1
+        AND CUENTA_ID = v_cuenta_id;
+        
+        IF v_prod1_existe = 0 THEN
+            RAISE_APPLICATION_ERROR(-20031, 'El primer producto no pertenece a su cuenta');
+        END IF;
+        
+        IF v_prod2_existe = 0 THEN
+            RAISE_APPLICATION_ERROR(-20032, 'El segundo producto no pertenece a su cuenta');
+        END IF;
+        
+        -- Evitar relacionar un producto consigo mismo
+        IF :NEW.PRODUCTO_GTIN = :NEW.PRODUCTO_GTIN1 THEN
+            RAISE_APPLICATION_ERROR(-20033, 'No se puede relacionar un producto consigo mismo');
+        END IF;
+    END IF;
+    
+    -- Actualizar la relación
+    UPDATE RELACIONADO
+    SET NOMBRE = :NEW.NOMBRE,
+        SENTIDO = :NEW.SENTIDO,
+        PRODUCTO_GTIN = :NEW.PRODUCTO_GTIN,
+        PRODUCTO_GTIN1 = :NEW.PRODUCTO_GTIN1
+    WHERE PRODUCTO_GTIN = :OLD.PRODUCTO_GTIN
+      AND PRODUCTO_GTIN1 = :OLD.PRODUCTO_GTIN1
+      AND PRODUCTO_CUENTA_ID = v_cuenta_id
+      AND PRODUCTO_CUENTA_ID1 = v_cuenta_id;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+-- Trigger para DELETE en V_RELACIONADO_STD
+CREATE OR REPLACE TRIGGER trg_v_relacionado_std_delete
+INSTEAD OF DELETE ON V_RELACIONADO_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO;
+    
+    -- Eliminar la relación
+    DELETE FROM RELACIONADO
+    WHERE PRODUCTO_GTIN = :OLD.PRODUCTO_GTIN
+      AND PRODUCTO_GTIN1 = :OLD.PRODUCTO_GTIN1
+      AND PRODUCTO_CUENTA_ID = v_cuenta_id
+      AND PRODUCTO_CUENTA_ID1 = v_cuenta_id;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+
+-- Asignar permisos CRUD sobre la vista de relaciones entre productos
+GRANT SELECT, INSERT, UPDATE, DELETE ON V_RELACIONADO_STD TO R_USER_STD;
+
+
+
+-- EJERCICIO 1f
+-- La gestión del CRUD de Atributo está controlada con VPD (para insert usamos un trigger)
+-- Se ha hecho al principio de la practica, arriba del todo
+
+-- Vista para relación entre atributos y productos del usuario actual
+CREATE OR REPLACE VIEW V_ATRIBUTO_PRODUCTO_STD AS
+SELECT AP.VALOR, AP.PRODUCTO_GTIN, AP.ATRIBUTO_ID
+FROM ATRIBUTO_PRODUCTO AP
+WHERE AP.PRODUCTO_CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)
+  AND AP.ATRIBUTO_CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)
+WITH CHECK OPTION;
+
+-- Crear sinónimo público
+CREATE PUBLIC SYNONYM MIS_ATRIBUTOS_PRODUCTOS FOR V_ATRIBUTO_PRODUCTO_STD;
+
+
+-- Trigger para INSERT en V_ATRIBUTO_PRODUCTO_STD
+CREATE OR REPLACE TRIGGER trg_v_atrib_prod_std_insert
+INSTEAD OF INSERT ON V_ATRIBUTO_PRODUCTO_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+    v_prod_existe NUMBER;
+    v_atrib_existe NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO 
+    WHERE ROWNUM = 1;
+    
+    -- Verificar que el producto pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_prod_existe
+    FROM PRODUCTO
+    WHERE GTIN = :NEW.PRODUCTO_GTIN
+    AND CUENTA_ID = v_cuenta_id;
+    
+    -- Verificar que el atributo pertenece a la cuenta del usuario
+    SELECT COUNT(*) INTO v_atrib_existe
+    FROM ATRIBUTO
+    WHERE ID = :NEW.ATRIBUTO_ID
+    AND CUENTA_ID = v_cuenta_id;
+    
+    IF v_prod_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20042, 'El producto no pertenece a su cuenta');
+    END IF;
+    
+    IF v_atrib_existe = 0 THEN
+        RAISE_APPLICATION_ERROR(-20043, 'El atributo no pertenece a su cuenta');
+    END IF;
+    
+    -- Insertar la relación
+    INSERT INTO ATRIBUTO_PRODUCTO (
+        VALOR,
+        PRODUCTO_GTIN, PRODUCTO_CUENTA_ID, 
+        ATRIBUTO_ID, ATRIBUTO_CUENTA_ID
+    ) VALUES (
+        :NEW.VALOR,
+        :NEW.PRODUCTO_GTIN, v_cuenta_id, 
+        :NEW.ATRIBUTO_ID, v_cuenta_id
+    );
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20041, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+-- Trigger para UPDATE en V_ATRIBUTO_PRODUCTO_STD
+CREATE OR REPLACE TRIGGER trg_v_atrib_prod_std_update
+INSTEAD OF UPDATE ON V_ATRIBUTO_PRODUCTO_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+    v_prod_existe NUMBER;
+    v_atrib_existe NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO 
+    WHERE ROWNUM = 1;
+    
+    -- Si están cambiando el producto o atributo, verificar que pertenecen a la cuenta
+    IF :NEW.PRODUCTO_GTIN != :OLD.PRODUCTO_GTIN OR :NEW.ATRIBUTO_ID != :OLD.ATRIBUTO_ID THEN
+        -- Verificar que el producto pertenece a la cuenta del usuario
+        SELECT COUNT(*) INTO v_prod_existe
+        FROM PRODUCTO
+        WHERE GTIN = :NEW.PRODUCTO_GTIN
+        AND CUENTA_ID = v_cuenta_id;
+        
+        -- Verificar que el atributo pertenece a la cuenta del usuario
+        SELECT COUNT(*) INTO v_atrib_existe
+        FROM ATRIBUTO
+        WHERE ID = :NEW.ATRIBUTO_ID
+        AND CUENTA_ID = v_cuenta_id;
+        
+        IF v_prod_existe = 0 THEN
+            RAISE_APPLICATION_ERROR(-20042, 'El producto no pertenece a su cuenta');
+        END IF;
+        
+        IF v_atrib_existe = 0 THEN
+            RAISE_APPLICATION_ERROR(-20043, 'El atributo no pertenece a su cuenta');
+        END IF;
+    END IF;
+    
+    -- Actualizar la relación
+    UPDATE ATRIBUTO_PRODUCTO
+    SET VALOR = :NEW.VALOR,
+        PRODUCTO_GTIN = :NEW.PRODUCTO_GTIN,
+        ATRIBUTO_ID = :NEW.ATRIBUTO_ID
+    WHERE PRODUCTO_GTIN = :OLD.PRODUCTO_GTIN
+      AND ATRIBUTO_ID = :OLD.ATRIBUTO_ID
+      AND PRODUCTO_CUENTA_ID = v_cuenta_id
+      AND ATRIBUTO_CUENTA_ID = v_cuenta_id;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20041, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+-- Trigger para DELETE en V_ATRIBUTO_PRODUCTO_STD
+CREATE OR REPLACE TRIGGER trg_v_atrib_prod_std_delete
+INSTEAD OF DELETE ON V_ATRIBUTO_PRODUCTO_STD
+FOR EACH ROW
+DECLARE
+    v_cuenta_id NUMBER;
+BEGIN
+    -- Obtener CUENTA_ID del usuario actual
+    SELECT CUENTA_ID INTO v_cuenta_id 
+    FROM V_USUARIO;
+    
+    -- Eliminar la relación
+    DELETE FROM ATRIBUTO_PRODUCTO
+    WHERE PRODUCTO_GTIN = :OLD.PRODUCTO_GTIN
+      AND ATRIBUTO_ID = :OLD.ATRIBUTO_ID
+      AND PRODUCTO_CUENTA_ID = v_cuenta_id
+      AND ATRIBUTO_CUENTA_ID = v_cuenta_id;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20041, 'Usuario actual no tiene una cuenta asociada');
+END;
+/
+
+
+-- Asignar permisos CRUD sobre la vista de relación atributos-productos
+GRANT SELECT, INSERT, UPDATE, DELETE ON V_ATRIBUTO_PRODUCTO_STD TO R_USER_STD;
+
+
+
+-- EJERCICIO 2
+
+
+-- Ya le hemos dado permiso para hacer CRUD de la tabla CUENTA
+-- Para la tabla USUARIO creamos una vista limitando la info a la que puede acceder:
+-- Excluye Email y Teléfono
+
+
+CREATE OR REPLACE VIEW V_USUARIO_GESTOR AS
+SELECT ID, NOMBREUSUARIO, NOMBRECOMPLETO, AVATAR, CUENTA_ID
+FROM USUARIO;
+
+-- Crear sinónimo público
+CREATE PUBLIC SYNONYM USUARIOS_GESTION FOR V_USUARIO_GESTOR;
+
+
+-- Trigger para operaciones INSERT en la vista V_CUENTA_GESTOR
+CREATE OR REPLACE TRIGGER trg_v_cuenta_gestor_insert
+INSTEAD OF INSERT ON V_CUENTA_GESTOR
+FOR EACH ROW
+BEGIN
+    -- Insertar en la tabla base
+    INSERT INTO CUENTA (
+        ID, NOMBRE, DIRECCIONFISCAL, NIF, 
+        FECHAALTA, USUARIO_ID, PLAN_ID
+    ) VALUES (
+        :NEW.ID, :NEW.NOMBRE, :NEW.DIRECCIONFISCAL, :NEW.NIF, 
+        COALESCE(:NEW.FECHAALTA, SYSDATE), :NEW.USUARIO_ID, :NEW.PLAN_ID
+    );
+END;
+/
+
+-- Trigger para operaciones UPDATE en la vista V_CUENTA_GESTOR
+CREATE OR REPLACE TRIGGER trg_v_cuenta_gestor_update
+INSTEAD OF UPDATE ON V_CUENTA_GESTOR
+FOR EACH ROW
+BEGIN
+    -- Actualizar en la tabla base
+    UPDATE CUENTA
+    SET NOMBRE = :NEW.NOMBRE,
+        DIRECCIONFISCAL = :NEW.DIRECCIONFISCAL,
+        NIF = :NEW.NIF,
+        PLAN_ID = :NEW.PLAN_ID,
+        USUARIO_ID = :NEW.USUARIO_ID
+    WHERE ID = :OLD.ID;
+END;
+/
+
+-- Trigger para operaciones DELETE en la vista V_CUENTA_GESTOR
+CREATE OR REPLACE TRIGGER trg_v_cuenta_gestor_delete
+INSTEAD OF DELETE ON V_CUENTA_GESTOR
+FOR EACH ROW
+DECLARE
+    v_tiene_dependencias NUMBER := 0;
+BEGIN
+    -- Verificar si la cuenta tiene usuarios asociados
+    SELECT COUNT(*) INTO v_tiene_dependencias
+    FROM USUARIO
+    WHERE CUENTA_ID = :OLD.ID;
+    
+    IF v_tiene_dependencias > 0 THEN
+        RAISE_APPLICATION_ERROR(-20101, 'No se puede eliminar la cuenta porque tiene usuarios asociados');
+    END IF;
+    
+    -- Verificar si tiene productos asociados
+    SELECT COUNT(*) INTO v_tiene_dependencias
+    FROM PRODUCTO
+    WHERE CUENTA_ID = :OLD.ID;
+    
+    IF v_tiene_dependencias > 0 THEN
+        RAISE_APPLICATION_ERROR(-20102, 'No se puede eliminar la cuenta porque tiene productos asociados');
+    END IF;
+    
+    -- Si no tiene dependencias, permitir la eliminación
+    DELETE FROM CUENTA
+    WHERE ID = :OLD.ID;
+END;
+/
+
+
+
+-- Asignar permisos de solo lectura sobre la vista de usuarios
+GRANT SELECT ON V_USUARIO_GESTOR TO R_GESTOR_CUENTA;
+
+
+
+-- EJERCICIO 3
+--Hecho ya al principio
