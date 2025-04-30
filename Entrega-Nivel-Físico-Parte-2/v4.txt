@@ -22,6 +22,7 @@ CREATE OR REPLACE VIEW V_USUARIO AS
 SELECT * FROM USUARIO WHERE UPPER(USUARIO.NOMBREUSUARIO)=USER
 WITH CHECK OPTION;
 
+
 CREATE PUBLIC SYNONYM MI_USUARIO FOR V_USUARIO;
 
 GRANT SELECT, UPDATE(NOMBRECOMPLETO, AVATAR, EMAIL, TELEFONO) ON V_USUARIO
@@ -38,7 +39,7 @@ SELECT GTIN, SKU, NOMBRE, MINIATURA, TEXTOCORTO, CREADO, MODIFICADO
 FROM PRODUCTO
 WHERE PRODUCTO.CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO);
 
-CREATE OR REPLACE PUBLIC SYNONYM MIS_PRODUCTOS FOR V_PRODUCTO_STD;
+CREATE PUBLIC SYNONYM MIS_PRODUCTOS FOR V_PRODUCTO_STD;
 
 
 --Acceso a ACTIVO (usando una vista y triggers en el ejercicio 1 para el CRUD)
@@ -943,71 +944,59 @@ FROM USUARIO;
 -- Crear sinónimo público
 CREATE PUBLIC SYNONYM USUARIOS_GESTION FOR V_USUARIO_GESTOR;
 
-
--- Trigger para operaciones INSERT en la vista V_CUENTA_GESTOR
-CREATE OR REPLACE TRIGGER trg_v_cuenta_gestor_insert
-INSTEAD OF INSERT ON V_CUENTA_GESTOR
+-- Trigger para operaciones INSERT en la vista V_USUARIO_GESTOR
+CREATE OR REPLACE TRIGGER trg_v_usuario_gestor_insert
+INSTEAD OF INSERT ON V_USUARIO_GESTOR
 FOR EACH ROW
 BEGIN
     -- Insertar en la tabla base
-    INSERT INTO CUENTA (
-        ID, NOMBRE, DIRECCIONFISCAL, NIF, 
-        FECHAALTA, USUARIO_ID, PLAN_ID
+    INSERT INTO USUARIO (
+        ID, NOMBREUSUARIO, NOMBRECOMPLETO, AVATAR, CUENTA_ID
     ) VALUES (
-        :NEW.ID, :NEW.NOMBRE, :NEW.DIRECCIONFISCAL, :NEW.NIF, 
-        COALESCE(:NEW.FECHAALTA, SYSDATE), :NEW.USUARIO_ID, :NEW.PLAN_ID
+        :NEW.ID, :NEW.NOMBREUSUARIO, :NEW.NOMBRECOMPLETO, 
+        :NEW.AVATAR, :NEW.CUENTA_ID
     );
 END;
 /
 
--- Trigger para operaciones UPDATE en la vista V_CUENTA_GESTOR
-CREATE OR REPLACE TRIGGER trg_v_cuenta_gestor_update
-INSTEAD OF UPDATE ON V_CUENTA_GESTOR
+-- Trigger para operaciones UPDATE en la vista V_USUARIO_GESTOR
+CREATE OR REPLACE TRIGGER trg_v_usuario_gestor_update
+INSTEAD OF UPDATE ON V_USUARIO_GESTOR
 FOR EACH ROW
 BEGIN
     -- Actualizar en la tabla base
-    UPDATE CUENTA
-    SET NOMBRE = :NEW.NOMBRE,
-        DIRECCIONFISCAL = :NEW.DIRECCIONFISCAL,
-        NIF = :NEW.NIF,
-        PLAN_ID = :NEW.PLAN_ID,
-        USUARIO_ID = :NEW.USUARIO_ID
+    UPDATE USUARIO
+    SET NOMBREUSUARIO = :NEW.NOMBREUSUARIO,
+        NOMBRECOMPLETO = :NEW.NOMBRECOMPLETO,
+        AVATAR = :NEW.AVATAR,
+        CUENTA_ID = :NEW.CUENTA_ID
     WHERE ID = :OLD.ID;
 END;
 /
 
--- Trigger para operaciones DELETE en la vista V_CUENTA_GESTOR
-CREATE OR REPLACE TRIGGER trg_v_cuenta_gestor_delete
-INSTEAD OF DELETE ON V_CUENTA_GESTOR
+-- Trigger para operaciones DELETE en la vista V_USUARIO_GESTOR
+CREATE OR REPLACE TRIGGER trg_v_usuario_gestor_delete
+INSTEAD OF DELETE ON V_USUARIO_GESTOR
 FOR EACH ROW
-DECLARE
-    v_tiene_dependencias NUMBER := 0;
 BEGIN
-    -- Verificar si la cuenta tiene usuarios asociados
-    SELECT COUNT(*) INTO v_tiene_dependencias
-    FROM USUARIO
-    WHERE CUENTA_ID = :OLD.ID;
+    -- Verificar si el usuario a eliminar es propietario de una cuenta
+    DECLARE
+        v_es_propietario NUMBER := 0;
+    BEGIN
+        SELECT COUNT(*) INTO v_es_propietario
+        FROM CUENTA
+        WHERE USUARIO_ID = :OLD.ID;
+        
+        IF v_es_propietario > 0 THEN
+            RAISE_APPLICATION_ERROR(-20103, 'No se puede eliminar el usuario porque es propietario de una cuenta');
+        END IF;
+    END;
     
-    IF v_tiene_dependencias > 0 THEN
-        RAISE_APPLICATION_ERROR(-20101, 'No se puede eliminar la cuenta porque tiene usuarios asociados');
-    END IF;
-    
-    -- Verificar si tiene productos asociados
-    SELECT COUNT(*) INTO v_tiene_dependencias
-    FROM PRODUCTO
-    WHERE CUENTA_ID = :OLD.ID;
-    
-    IF v_tiene_dependencias > 0 THEN
-        RAISE_APPLICATION_ERROR(-20102, 'No se puede eliminar la cuenta porque tiene productos asociados');
-    END IF;
-    
-    -- Si no tiene dependencias, permitir la eliminación
-    DELETE FROM CUENTA
+    -- Si no es propietario de ninguna cuenta, permitir la eliminación
+    DELETE FROM USUARIO
     WHERE ID = :OLD.ID;
 END;
 /
-
-
 
 -- Asignar permisos de solo lectura sobre la vista de usuarios
 GRANT SELECT ON V_USUARIO_GESTOR TO R_GESTOR_CUENTA;
