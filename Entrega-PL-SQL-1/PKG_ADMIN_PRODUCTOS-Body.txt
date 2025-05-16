@@ -1,5 +1,7 @@
 create or replace PACKAGE BODY PKG_ADMIN_PRODUCTOS AS
 
+-- Falta hacer una función para comprobar que el usuario tenga acceso a la cuenta
+
   FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYPE AS
     v_plan_id CUENTA.PLAN_ID%TYPE;
     v_plan PLAN%ROWTYPE;
