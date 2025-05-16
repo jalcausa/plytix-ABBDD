@@ -1,0 +1,29 @@
+create or replace PACKAGE BODY PKG_ADMIN_PRODUCTOS AS
+
+  FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYPE AS
+    v_plan_id CUENTA.PLAN_ID%TYPE;
+    v_plan PLAN%ROWTYPE;
+  BEGIN
+    -- Obtener el plan_id de la cuenta que nos pasan como parámetro
+    SELECT PLAN_ID INTO v_plan_id FROM CUENTA WHERE ID = p_cuenta_id;
+
+    -- Obtener la fila completa del plan
+    SELECT * INTO v_plan FROM PLAN WHERE ID = v_plan_id;
+    
+    RETURN v_plan;
+    
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE EXCEPTION_PLAN_NO_ASIGNADO;
+    WHEN OTHERS THEN
+        DECLARE
+            Vmensaje varchar2(500);
+        BEGIN
+            Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
+            insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+            RAISE;
+        END;
+  END F_OBTENER_PLAN_CUENTA;
+
+
+END PKG_ADMIN_PRODUCTOS;
