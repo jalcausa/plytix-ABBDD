@@ -1,6 +1,6 @@
 create or replace PACKAGE BODY PKG_ADMIN_PRODUCTOS AS
 
-FUNCTION P_USUARIO_ACCESO_CUENTA (p_nombreusuario IN USUARIO.NOMBREUSUARIO%TYPE,
+FUNCTION F_USUARIO_ACCESO_CUENTA (p_nombreusuario IN USUARIO.NOMBREUSUARIO%TYPE,
   p_cuenta_id IN CUENTA.ID%TYPE)RETURN NUMBER AS
     v_count NUMBER;
   BEGIN
@@ -10,10 +10,10 @@ FUNCTION P_USUARIO_ACCESO_CUENTA (p_nombreusuario IN USUARIO.NOMBREUSUARIO%TYPE,
      WHERE nombreusuario = p_nombreusuario
        AND cuenta_id = p_cuenta_id;
     RETURN CASE WHEN v_count > 0 THEN 1 ELSE 0 END;
-  END;
+  END F_USUARIO_ACCESO_CUENTA;
   
 
-  FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYPE AS
+FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYPE AS
     v_cuenta CUENTA%ROWTYPE;
     v_plan_id CUENTA.PLAN_ID%TYPE;
     v_plan PLAN%ROWTYPE;
@@ -24,7 +24,7 @@ FUNCTION P_USUARIO_ACCESO_CUENTA (p_nombreusuario IN USUARIO.NOMBREUSUARIO%TYPE,
     
     -- Comprobar que el usuario tiene acceso a la cuenta
     -- Si no tiene acceso lanzar la excepción personalizada EXCEPTION_SIN_ACCESO_CUENTA;
-    IF P_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
+    IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
       RAISE EXCEPTION_SIN_ACCESO_CUENTA;
     END IF;
     
@@ -36,12 +36,12 @@ FUNCTION P_USUARIO_ACCESO_CUENTA (p_nombreusuario IN USUARIO.NOMBREUSUARIO%TYPE,
       WHEN NO_DATA_FOUND THEN
         RAISE EXCEPTION_PLAN_NO_ASIGNADO;
     END;    
-
+    
     -- Obtener la fila completa del plan
     SELECT * INTO v_plan FROM PLAN WHERE ID = v_plan_id;
     
     RETURN v_plan;
-    
+
   EXCEPTION
     WHEN OTHERS THEN
         DECLARE
@@ -53,6 +53,37 @@ FUNCTION P_USUARIO_ACCESO_CUENTA (p_nombreusuario IN USUARIO.NOMBREUSUARIO%TYPE,
             RAISE;
         END;
   END F_OBTENER_PLAN_CUENTA;
-
+  
+FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
+    v_count NUMBER;
+    v_cuenta CUENTA%ROWTYPE;
+    BEGIN
+        -- Comprobar que existe la cuenta que nos pasan como parámetro:
+        -- Laza NO_DATA_FOUND por defecto si no existe
+        SELECT * INTO v_cuenta FROM CUENTA WHERE ID = p_cuenta_id;
+    
+        -- Comprobar que el usuario tiene acceso a la cuenta
+        -- Si no tiene acceso lanzar la excepción personalizada EXCEPTION_SIN_ACCESO_CUENTA;
+        IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
+          RAISE EXCEPTION_SIN_ACCESO_CUENTA;
+        END IF;
+        
+        SELECT COUNT (*) INTO v_count
+            FROM PRODUCTO
+            WHERE CUENTA_ID = p_cuenta_id;
+        
+        RETURN v_count;    
+    EXCEPTION
+    WHEN OTHERS THEN
+        DECLARE
+            Vmensaje varchar2(500);
+        BEGIN
+            Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
+            DBMS_OUTPUT.PUT_LINE(Vmensaje);
+            insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+            RAISE;
+        END;
+  END F_CONTAR_PRODUCTOS_CUENTA;
+    
 
 END PKG_ADMIN_PRODUCTOS;
