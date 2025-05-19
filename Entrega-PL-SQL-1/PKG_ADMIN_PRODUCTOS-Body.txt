@@ -85,6 +85,7 @@ FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER 
         END;
   END F_CONTAR_PRODUCTOS_CUENTA;
 
+-- Ejercicio 4
 FUNCTION F_NUM_CATEGORIAS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
     v_num_categorias_cuenta NUMBER;
     v_dummy NUMBER;
@@ -136,6 +137,7 @@ FUNCTION F_NUM_CATEGORIAS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
             END;
   END F_NUM_CATEGORIAS_CUENTA;
 
+-- Ejercicio 5
 PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE, p_nuevo_nombre IN PRODUCTO.NOMBRE%TYPE) AS
     v_dummy NUMBER;
     BEGIN
@@ -186,4 +188,23 @@ PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_
             END;
   END P_ACTUALIZAR_NOMBRE_PRODUCTO;
 
+/*
+ * Procedimiento auxiliar utilizado por 
+ * el job J_ACTUALIZA_PRODUCTOS, que a su
+ * vez se apoya en el procedimiento que se
+ * de define en el ejercicio 8 de la primera
+ * relacion de PL/SQL, P_ACTUALIZAR_PRODUCTOS
+ */
+PROCEDURE P_ACTUALIZAR_TODAS_CUENTAS AS
+    CURSOR c_cuentas IS SELECT id FROM cuenta;
+    BEGIN
+        FOR r IN c_cuentas LOOP
+            BEGIN
+                P_ACTUALIZAR_PRODUCTOS(r.id);
+            EXCEPTION
+                WHEN OTHERS THEN
+                    INSERT INTO traza VALUES (SYSDATE, USER, 'P_ACTUALIZAR_TODAS_CUENTAS', 'Error en cuenta ' || r.id || ': ' || SQLERRM);
+            END;
+        END LOOP;
+    END P_ACTUALIZAR_TODAS_CUENTAS;
 END PKG_ADMIN_PRODUCTOS;
