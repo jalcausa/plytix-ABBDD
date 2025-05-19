@@ -1,0 +1,18 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<FKIndexAssociation class="oracle.dbtools.crest.model.design.relational.FKIndexAssociation" directorySegmentName="seg_0" id="D239D5F7-5272-80E5-53AC-77C36FECEDD9" containerWithKeyObject="0BA73696-B88E-8C2D-F1B9-CDC76526170F" localFKIndex="7CA7B4FC-C1E6-1CD8-C566-7577E21AB541" name="relation_7_categorÃ­a_fk">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>DB115E10-816D-704C-C2AF-4832F7626915</importedID>
+<referredTableLongName>categorÃ­a</referredTableLongName>
+<deleteRule>NO ACTION</deleteRule>
+<referredTableID>D8032753-C7B9-FAA1-9CCA-56B7A14062F3</referredTableID>
+<keyObject>ABC7CFDF-1DB9-C27B-8327-7168B3A68356</keyObject>
+<referredKeyID>ABC7CFDF-1DB9-C27B-8327-7168B3A68356</referredKeyID>
+<mandatory>true</mandatory>
+<refColNames>id,cuenta_id</refColNames>
+<transferable>true</transferable>
+<rely>false</rely>
+<columnDependencyConstraintGenerateInDDL>true</columnDependencyConstraintGenerateInDDL>
+</FKIndexAssociation>
