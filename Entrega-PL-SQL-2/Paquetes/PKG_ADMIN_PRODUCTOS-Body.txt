@@ -187,3 +187,24 @@ PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_
                 RAISE;
             END;
   END P_ACTUALIZAR_NOMBRE_PRODUCTO;
+
+/*
+ * Procedimiento auxiliar utilizado por 
+ * el job J_ACTUALIZA_PRODUCTOS, que a su
+ * vez se apoya en el procedimiento que se
+ * de define en el ejercicio 8 de la primera
+ * relacion de PL/SQL, P_ACTUALIZAR_PRODUCTOS
+ */
+PROCEDURE P_ACTUALIZAR_TODAS_CUENTAS AS
+    CURSOR c_cuentas IS SELECT id FROM cuenta;
+    BEGIN
+        FOR r IN c_cuentas LOOP
+            BEGIN
+                P_ACTUALIZAR_PRODUCTOS(r.id);
+            EXCEPTION
+                WHEN OTHERS THEN
+                    INSERT INTO traza VALUES (SYSDATE, USER, 'P_ACTUALIZAR_TODAS_CUENTAS', 'Error en cuenta ' || r.id || ': ' || SQLERRM);
+            END;
+        END LOOP;
+    END P_ACTUALIZAR_TODAS_CUENTAS;
+END PKG_ADMIN_PRODUCTOS;
