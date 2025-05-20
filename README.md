@@ -3,7 +3,7 @@
 ## 1. ¿Se han creado los siguientes objetos?
 
 - ¿Se ha creado un esquema distinto para el trabajo? → <span style="color:red;">NO</span>
-- ¿Se han creado índices en la base de datos? → <span style="color:red;">NO</span>
+- ¿Se han creado índices en la base de datos? → <span style="color:green;">Sí</span>
 - ¿Se han importado los datos a las tablas Cuentas, Planes, Usuarios, Productos...? → <span style="color:red;">NO</span>
 - ¿Se ha añadido una tabla TRAZA...? → <span style="color:red;">NO</span>
 
