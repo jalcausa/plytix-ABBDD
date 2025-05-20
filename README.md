@@ -3,14 +3,14 @@
 ## 1. ¿Se han creado los siguientes objetos?
 
 - ¿Se ha creado un esquema distinto para el trabajo? → <span style="color:red;">NO</span>
-- ¿Se han creado índices en la base de datos? → <span style="color:green;">Sí</span>
+- ¿Se han creado índices en la base de datos? → <span style="color:green;">SÍ</span>
 - ¿Se han importado los datos a las tablas Cuentas, Planes, Usuarios, Productos...? → <span style="color:red;">NO</span>
-- ¿Se ha añadido una tabla TRAZA...? → <span style="color:red;">NO</span>
+- ¿Se ha añadido una tabla TRAZA y se usa para seguir errores? → <span style="color:red;">SÍ</span>
 
 ## 2. Seguridad
 
-- ¿Se ha añadido alguna columna como se indicaba...? → <span style="color:red;">NO</span>
-- ¿Se ha aplicado seguridad...? → <span style="color:red;">NO</span>
+- ¿Se ha añadido alguna columna como se indicaba en la práctica de seguridad? → <span style="color:red;">SÍ</span>
+- ¿Se ha aplicado alguna política de autorización VPD? → <span style="color:red;">NO</span>
 
 ## 3. Vistas
 
