@@ -1,0 +1,66 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<TableProxyOraclev11g class="oracle.dbtools.crest.model.design.storage.oracle.v11g.TableProxyOraclev11g" name="usuario" directorySegmentName="seg_0" id="F11BAF44-E93B-0EAB-791F-12A168E13DE5">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<logging>YES</logging>
+<partitionedRowMovement>DISABLE</partitionedRowMovement>
+<temporaryChanged>false</temporaryChanged>
+<accessDriverType>oracle_loader</accessDriverType>
+<rejectLimit></rejectLimit>
+<columnProxies itemClass="oracle.dbtools.crest.model.design.storage.oracle.v12c.ColumnProxyOraclev12c">
+<ColumnProxy name="cuenta_id" id="2C668DBF-9633-DB60-BB10-B966154DA38E">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ColumnProxy>
+<ColumnProxy name="id" id="2E7B445E-786E-8553-BBB3-3C35FCAF2C75">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ColumnProxy>
+<ColumnProxy name="email" id="43573145-A1C1-D2AD-A58C-1CCB979B5194">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ColumnProxy>
+<ColumnProxy name="nombreusuario" id="5A40F165-766A-615C-09DD-D2AD3EB343B7">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ColumnProxy>
+<ColumnProxy name="nombrecompleto" id="6DBF3CB3-0DC3-DE9C-DBD9-354D811B96D7">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ColumnProxy>
+<ColumnProxy name="avatar" id="7BF045F2-8B77-92E2-8040-E51DFF2D77AF">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ColumnProxy>
+<ColumnProxy name="telÃ©fono" id="CCEF9841-D8D2-CF3F-251C-4229E437EDBC">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ColumnProxy>
+</columnProxies>
+<foreignKeys>
+<ForeignKey class="oracle.dbtools.crest.model.design.storage.oracle.v10g.FKProxyOraclev10g" name="usuario_cuenta_fk" id="2CB13CF8-A624-EEF9-D263-B56CCE22141C">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ForeignKey>
+</foreignKeys>
+<primaryKeys>
+<PrimaryKey class="oracle.dbtools.crest.model.design.storage.oracle.v10g.PKProxyOraclev10g" name="usuario_pk" id="ABF5FE3D-7597-BAFF-0C18-04FE7D90E835">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<logging></logging>
+<tableSpace>80CA8E6F-A774-B1A8-30D3-073EA37925AC</tableSpace>
+<indexSort>SORTED</indexSort>
+<usingIndex>BY INDEX NAME</usingIndex>
+</PrimaryKey>
+</primaryKeys>
+</TableProxyOraclev11g>

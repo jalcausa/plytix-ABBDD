@@ -85,5 +85,58 @@ FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER 
         END;
   END F_CONTAR_PRODUCTOS_CUENTA;
     
+    
+FUNCTION  F_VALIDAR_ATRIBUTOS_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE,
+p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) RETURN BOOLEAN AS
+    v_cuenta CUENTA%ROWTYPE;
+    v_total_atributos NUMBER;
+    v_total_valores NUMBER;
+    v_existe_producto NUMBER;
+    BEGIN
+        -- Comprobar que existe la cuenta que nos pasan como parámetro:
+        -- Laza NO_DATA_FOUND por defecto si no existe
+        SELECT * INTO v_cuenta FROM CUENTA WHERE ID = p_cuenta_id;
+    
+        -- Comprobar que el usuario tiene acceso a la cuenta
+        -- Si no tiene acceso lanzar la excepción personalizada EXCEPTION_SIN_ACCESO_CUENTA;
+        IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
+          RAISE EXCEPTION_SIN_ACCESO_CUENTA;
+        END IF;
+        
+        -- Verificar que el producto existe
+        SELECT COUNT(*) INTO v_existe_producto
+        FROM PRODUCTO
+        WHERE GTIN = p_producto_gtin
+        AND CUENTA_ID = p_cuenta_id;
+        
+        IF v_existe_producto = 0 THEN
+            RAISE NO_DATA_FOUND;
+        END IF;
+        
+        -- Contar el número total de atributos definidos para esta cuenta
+        SELECT COUNT(*) INTO v_total_atributos
+        FROM ATRIBUTO
+        WHERE CUENTA_ID = p_cuenta_id;
+        
+        -- Contar el número de atributos que tienen valores para este producto
+        SELECT COUNT(DISTINCT ap.ATRIBUTO_ID) INTO v_total_valores
+        FROM ATRIBUTO_PRODUCTO ap
+        WHERE ap.PRODUCTO_GTIN = p_producto_gtin
+        AND ap.PRODUCTO_CUENTA_ID = p_cuenta_id
+        AND ap.ATRIBUTO_CUENTA_ID = p_cuenta_id;
+    
+        -- Verificar si todos los atributos tienen valores asociados
+        RETURN (v_total_valores = v_total_atributos);
+    EXCEPTION
+    WHEN OTHERS THEN
+        DECLARE
+            Vmensaje varchar2(500);
+        BEGIN
+            Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
+            DBMS_OUTPUT.PUT_LINE(Vmensaje);
+            insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+            RAISE;
+        END;
+  END F_VALIDAR_ATRIBUTOS_PRODUCTO;
 
 END PKG_ADMIN_PRODUCTOS;

@@ -1,0 +1,152 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="84B23D13-570B-E60C-AF71-0B03F9DB08F3" name="plan">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>E6D6C364-EEC4-B171-AEAE-2902C778211C</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="id" id="C05E933C-5911-6751-D712-3BF99475AEBC">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>8CAED883-6744-3A8C-D0CB-AD315511C7E1</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="nombre" id="D60BB14A-1768-10DB-F37A-99B6B33E493C">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>76CC98D7-558C-0EE5-CB79-6D93AF360B78</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>77BCC37C-20D6-8B99-F1B3-2B4073053ABB</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="productos" id="1C5D1528-6627-1A1D-BB85-D6314687FEFC">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>E54D0AD8-6CF5-EEAA-79CF-E70391CFC41C</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="activos" id="111E3BE2-C298-5A38-348B-EEDCBED45A85">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>45033C22-E1DE-5F11-389F-A54C4B4DF654</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="almacenamiento" id="9E4AC9A0-BC23-A795-10BC-A0F6F6BBB7B9">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>F0780835-622A-3F91-1952-AE2D79F6CB7E</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>BF74A256-B69F-C4A9-16C2-A86A6DF63A81</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="categoriasproducto" id="01FABE8B-B041-5792-25B0-583E99888D92">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>3A33913B-BB0B-AF6C-DB6E-A4C57579BDEB</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="categoriasactivos" id="693E28CD-053F-B24D-2DCE-07875BB612A8">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>DF7838DE-8347-508C-4BC4-1633C9CDF6DB</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="relaciones" id="28D954CA-CBDB-18C7-058B-06D4CBBB8C19">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>38CC0809-1311-CC7B-AB9C-BD49A5E897C2</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="precio" id="A5B640E2-F013-5B6D-D175-9A9E2266579A">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>6B93D509-E74A-B65E-02AD-756005FBEE92</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="6CD59B0D-68C8-3324-A37B-8B72A8FAE17B" name="plan pk">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>090BF153-DA8A-E731-2B45-575DB48B22FE</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>C05E933C-5911-6751-D712-3BF99475AEBC</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

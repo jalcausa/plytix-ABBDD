@@ -1,0 +1,15 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<relationalModel class="oracle.dbtools.crest.model.design.relational.RelationalDesign" name="Relational_1" id="66921927-5BD4-5B09-809C-94BD9D14A286" mainViewID="4179F64C-33D1-C107-7D07-CA28728D7C42">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:05:23 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<shouldBeOpen>false</shouldBeOpen>
+<selectedRDBMSSite>32076570-2523-435C-2E92-BF29817DFF70</selectedRDBMSSite>
+<importDDLFileStamps>
+<importDDLFileStamp class="oracle.dbtools.crest.imports.DDLFileStamp">
+<fileName>diagrama.sql</fileName>
+<pathName>C:\Users\Usuario\OneDrive - Universidad de Málaga\Documentos\INFOMATES\4\Cuatrimestre 2\Ingeniería informática\Administración de bases de datos\Tarea 1</pathName>
+<dbType>9</dbType>
+</importDDLFileStamp>
+</importDDLFileStamps>
+</relationalModel>

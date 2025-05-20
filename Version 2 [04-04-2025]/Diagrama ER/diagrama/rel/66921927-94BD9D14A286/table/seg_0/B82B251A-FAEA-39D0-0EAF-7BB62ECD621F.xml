@@ -1,0 +1,138 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="B82B251A-FAEA-39D0-0EAF-7BB62ECD621F" name="relacionado">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>2E2D9B1F-4098-05D9-5FFB-919C59C93004</importedID>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="nombre" id="7A964C82-DD42-360C-05A6-7EE33A79DA97">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>10992428-81FB-9B98-C0CB-9BAE62C140EC</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>DB931ED2-0477-9B9C-C659-81F6FCDA38F4</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="sentido" id="98EE529F-F12A-B7E4-A528-E5F6AA03E9CB">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>CD455F9A-69B6-C7CF-6375-11BAB86B1FB1</importedID>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>DB931ED2-0477-9B9C-C659-81F6FCDA38F4</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="producto_gtin" id="79F9FD21-B43E-79D1-BF29-131E059FE93B">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>E3EDAC6E-9DE4-5B82-3E9D-E997928F01F9</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<domain>956BFE00-BF58-69B1-8CC6-AE9D833D81AB</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="568B5C61-1183-720E-41FF-464C43C22D37" referredColumn="FEA17BA3-8C45-2157-33F3-1714D8CCFB64"/>
+</associations>
+</Column>
+<Column name="producto_gtin1" id="784C37A3-782D-4B84-2946-3200A0DC04A0">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>9F859619-A121-E3CC-347E-35D1BC8EB3A8</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT019</logicalDatatype>
+<domain>956BFE00-BF58-69B1-8CC6-AE9D833D81AB</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="FEC9BBDD-3946-EF19-F953-8A044307AC0E" referredColumn="FEA17BA3-8C45-2157-33F3-1714D8CCFB64"/>
+</associations>
+</Column>
+<Column name="producto_cuenta_id" id="6BE5E335-CCDC-B882-A751-CF736EDA255B">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>817C36E7-76B1-8B3D-9AB6-C6A5CF02EBC6</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="568B5C61-1183-720E-41FF-464C43C22D37" referredColumn="8966ABA7-ECDB-940B-1F50-D41F9B084BA8"/>
+</associations>
+</Column>
+<Column name="producto_cuenta_id1" id="B80C98FA-325F-18BD-D5D4-667C6F96D8E5">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>165D5A78-D5FB-620D-45BC-A93DB7A2B116</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="FEC9BBDD-3946-EF19-F953-8A044307AC0E" referredColumn="8966ABA7-ECDB-940B-1F50-D41F9B084BA8"/>
+</associations>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="248985A0-3273-143F-BF7D-532053BE70B5" name="relacionado_pk">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>F7BCF1DA-C754-ED32-C276-75848DDBC9BD</importedID>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="79F9FD21-B43E-79D1-BF29-131E059FE93B"/>
+<colUsage columnID="6BE5E335-CCDC-B882-A751-CF736EDA255B"/>
+<colUsage columnID="784C37A3-782D-4B84-2946-3200A0DC04A0"/>
+<colUsage columnID="B80C98FA-325F-18BD-D5D4-667C6F96D8E5"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="BE6F9D46-8841-A24C-8791-9AC3FAF3FC4C" name="relacionado_producto_fk">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="79F9FD21-B43E-79D1-BF29-131E059FE93B"/>
+<colUsage columnID="6BE5E335-CCDC-B882-A751-CF736EDA255B"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="4058138E-C2C9-0032-2EA0-11167101D87A" name="relacionado_producto_fkv1">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="784C37A3-782D-4B84-2946-3200A0DC04A0"/>
+<colUsage columnID="B80C98FA-325F-18BD-D5D4-667C6F96D8E5"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

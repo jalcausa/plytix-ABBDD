@@ -1,0 +1,117 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Entity class="oracle.dbtools.crest.model.design.logical.Entity" directorySegmentName="seg_0" id="C4393DFB-606D-1533-5DE6-07A846C22867" name="activos">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>F2CF5323-F7B0-4FD6-7943-CAFCA8FBD38C</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<adequatelyNormalized>NO</adequatelyNormalized>
+<expectedVolumes>0</expectedVolumes>
+<fwdEngineeringStrategyName>Single Table</fwdEngineeringStrategyName>
+<growthPercent>0</growthPercent>
+<growthType>Year</growthType>
+<maxVolumes>9999999</maxVolumes>
+<minVolumes>0</minVolumes>
+<normalForm>Third</normalForm>
+<attributes itemClass="oracle.dbtools.crest.model.design.logical.Attribute">
+<Attribute name="id" id="8333F354-72E8-8B4F-43DA-BAF6E380D518">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>4EDB7FAE-BDC3-99A7-5E50-48C011B70C1F</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="nombre" id="DB698E93-D492-5388-1275-313666C417AB">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>4C1CBC76-8523-2FDA-6EC7-BE7EF0C439EE</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>DB931ED2-0477-9B9C-C659-81F6FCDA38F4</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="tamaÃ±o" id="7BF43873-C930-4656-B85C-E57586A3F03F">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>47E8ABBB-8246-2E2E-412F-FDB66062B488</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="tipo" id="62B42103-CB72-9FD4-7470-9B9AAC061C85">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>99BF1CEF-A7EA-4444-3314-AD72978AD65F</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>DB931ED2-0477-9B9C-C659-81F6FCDA38F4</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="url" id="11A7BFE0-3D3B-7846-5830-559163484091">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>CF46F31F-A305-5B91-1569-52E19645A0C3</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<nullsAllowed>true</nullsAllowed>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>C6B27EF9-B19B-4DC3-0AB4-93A6544B1702</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+<Attribute name="cuenta id" id="FABD8529-7835-B281-7B04-49B4028E79CF">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>72B02A5E-E972-EB37-A7EA-07CDCFAFB6C7</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<referedAttribute>AE9E349C-02EF-5C20-5432-DAFDB3B49AC3</referedAttribute>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+</Attribute>
+</attributes>
+<identifiers itemClass="oracle.dbtools.crest.model.design.logical.CandidateKey">
+<identifier id="BA24BC2E-CE69-E804-00F0-002E0054E57B" name="activos pk">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>4DF0661A-300B-2266-1ECA-6B47A71AC45B</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<pk>true</pk>
+<usedAttributes>
+<attributeRef>8333F354-72E8-8B4F-43DA-BAF6E380D518</attributeRef>
+<attributeRef>FABD8529-7835-B281-7B04-49B4028E79CF</attributeRef>
+</usedAttributes>
+</identifier>
+</identifiers>
+</Entity>

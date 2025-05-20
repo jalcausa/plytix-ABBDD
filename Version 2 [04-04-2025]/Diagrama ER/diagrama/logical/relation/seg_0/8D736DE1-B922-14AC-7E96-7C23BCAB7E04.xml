@@ -1,0 +1,20 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Relation class="oracle.dbtools.crest.model.design.logical.Relation" name="cuenta_plan_fk" directorySegmentName="seg_0" id="8D736DE1-B922-14AC-7E96-7C23BCAB7E04">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:18 UTC</createdTime>
+<generatorID>E8EA40BF-C342-6367-97FD-EC89E93A3D6F</generatorID>
+<ownerDesignName>diagrama</ownerDesignName>
+<engineerTo>
+<item key="66921927-5BD4-5B09-809C-94BD9D14A286" value="true"/>
+</engineerTo>
+<sourcePk>6CD59B0D-68C8-3324-A37B-8B72A8FAE17B</sourcePk>
+<identifying>false</identifying>
+<optionalSource>true</optionalSource>
+<optionalTarget>false</optionalTarget>
+<sourceCardinality>1</sourceCardinality>
+<sourceEntity>84B23D13-570B-E60C-AF71-0B03F9DB08F3</sourceEntity>
+<targetCardinalityString>*</targetCardinalityString>
+<targetEntity>A7316746-A7B8-E2F4-19C8-0EF07725AF15</targetEntity>
+<transferable>true</transferable>
+<deleteRule>NO ACTION</deleteRule>
+</Relation>

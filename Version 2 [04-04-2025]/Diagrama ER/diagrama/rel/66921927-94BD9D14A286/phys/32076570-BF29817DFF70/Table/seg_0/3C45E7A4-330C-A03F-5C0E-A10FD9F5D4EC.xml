@@ -1,0 +1,56 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<TableProxyOraclev11g class="oracle.dbtools.crest.model.design.storage.oracle.v11g.TableProxyOraclev11g" name="relation_4" directorySegmentName="seg_0" id="3C45E7A4-330C-A03F-5C0E-A10FD9F5D4EC">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<logging>YES</logging>
+<partitionedRowMovement>DISABLE</partitionedRowMovement>
+<temporaryChanged>false</temporaryChanged>
+<accessDriverType>oracle_loader</accessDriverType>
+<rejectLimit></rejectLimit>
+<columnProxies itemClass="oracle.dbtools.crest.model.design.storage.oracle.v12c.ColumnProxyOraclev12c">
+<ColumnProxy name="activos_cuenta_id" id="1AF4AF30-13A4-0877-CB34-70F3F7DFE14C">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ColumnProxy>
+<ColumnProxy name="producto_cuenta_id" id="231D3E30-5BAD-AD8C-1AAF-2EF45E52EE33">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ColumnProxy>
+<ColumnProxy name="activos_id" id="B51D6005-4D3D-A785-EFB7-5FD275E8C572">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ColumnProxy>
+<ColumnProxy name="producto_gtin" id="E44406DC-BE7A-0063-50C1-DB5BF461B729">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ColumnProxy>
+</columnProxies>
+<foreignKeys>
+<ForeignKey class="oracle.dbtools.crest.model.design.storage.oracle.v10g.FKProxyOraclev10g" name="relation_4_activos_fk" id="0CDA9A2B-F9CC-BCB8-47DE-BC98F07B1A94">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ForeignKey>
+<ForeignKey class="oracle.dbtools.crest.model.design.storage.oracle.v10g.FKProxyOraclev10g" name="relation_4_producto_fk" id="DBA67283-315B-7CF2-1878-DEA765447E09">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+</ForeignKey>
+</foreignKeys>
+<primaryKeys>
+<PrimaryKey class="oracle.dbtools.crest.model.design.storage.oracle.v10g.PKProxyOraclev10g" name="relation_4_pk" id="5D93C69E-6109-62B1-11EA-276C2130B749">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<logging></logging>
+<tableSpace>80CA8E6F-A774-B1A8-30D3-073EA37925AC</tableSpace>
+<indexSort>SORTED</indexSort>
+<usingIndex>BY INDEX NAME</usingIndex>
+</PrimaryKey>
+</primaryKeys>
+</TableProxyOraclev11g>

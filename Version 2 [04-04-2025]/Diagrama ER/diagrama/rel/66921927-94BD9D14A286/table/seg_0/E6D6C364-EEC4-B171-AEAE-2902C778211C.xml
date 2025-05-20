@@ -1,0 +1,136 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="E6D6C364-EEC4-B171-AEAE-2902C778211C" name="plan">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>76185E39-0F1A-EB07-E2A3-9757641A57A8</importedID>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="id" id="8CAED883-6744-3A8C-D0CB-AD315511C7E1">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>3635B6E5-97A8-CDFF-A532-9FE7B2C70C42</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="nombre" id="76CC98D7-558C-0EE5-CB79-6D93AF360B78">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>1947618A-33CF-3DAE-5F57-16DDBAC849FA</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>77BCC37C-20D6-8B99-F1B3-2B4073053ABB</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="productos" id="E54D0AD8-6CF5-EEAA-79CF-E70391CFC41C">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>E88739FA-A291-2543-EC1F-DB62229AC62E</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="activos" id="45033C22-E1DE-5F11-389F-A54C4B4DF654">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>E73919CE-7781-F933-DDF0-4AE2EDC92722</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="almacenamiento" id="F0780835-622A-3F91-1952-AE2D79F6CB7E">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>BBCBC9E7-C6B8-8018-16AF-C25CEDF9590B</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT024</logicalDatatype>
+<domain>BF74A256-B69F-C4A9-16C2-A86A6DF63A81</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="categoriasproducto" id="3A33913B-BB0B-AF6C-DB6E-A4C57579BDEB">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>AD2B2609-05EF-F2ED-E1AF-46F34E3E2D13</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="categoriasactivos" id="DF7838DE-8347-508C-4BC4-1633C9CDF6DB">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>9AAA1287-C511-3D41-4B8A-5FD0A1930240</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="relaciones" id="38CC0809-1311-CC7B-AB9C-BD49A5E897C2">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>69CBD138-F254-25FB-5DE5-B1E0B29F944C</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+<Column name="precio" id="6B93D509-E74A-B65E-02AD-756005FBEE92">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>1E591626-3133-12F1-7749-CD632837CF99</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="090BF153-DA8A-E731-2B45-575DB48B22FE" name="plan_pk">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>A2AAAD00-D352-B1DA-2636-FF43425AE387</importedID>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="8CAED883-6744-3A8C-D0CB-AD315511C7E1"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>

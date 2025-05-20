@@ -1,0 +1,112 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<Table class="oracle.dbtools.crest.model.design.relational.Table" directorySegmentName="seg_0" id="BEAC7CB3-7AD5-FFD1-E592-47658C3178B6" name="relation_16">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>76570F1C-34CA-4228-F5B4-D3B87EC33591</importedID>
+<allowColumnReorder>false</allowColumnReorder>
+<existDependencyGenerateInDDl>true</existDependencyGenerateInDDl>
+<parsed>true</parsed>
+<columns itemClass="oracle.dbtools.crest.model.design.relational.Column">
+<Column name="activos_id" id="134120FF-3FE5-99E6-603E-60E5BBA90035">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>22B15ABD-48B2-3392-C00B-5CC8934755DB</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="B4145DEC-772E-E64D-B2E5-DE7F679BB291" referredColumn="4EDB7FAE-BDC3-99A7-5E50-48C011B70C1F"/>
+</associations>
+</Column>
+<Column name="activos_cuenta_id" id="08688FFA-DBBE-0DE5-DA72-1BF406F8B4AB">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>F04E9489-0FD7-940D-194F-3B943D107069</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="B4145DEC-772E-E64D-B2E5-DE7F679BB291" referredColumn="8412CC2A-5FB7-8622-BFFF-4551E337B03D"/>
+</associations>
+</Column>
+<Column name="cat_act_id" id="B33A7E93-C951-E5EC-C922-3E32C0441A21">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>5ABBC4A5-CEC1-8061-8BDF-4F34A46FBA42</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="7B9C24BA-28A3-64B5-8E2F-B86FCE8D4721" referredColumn="1A0DC5F4-B679-D5BE-F167-81B6EC53D45C"/>
+</associations>
+</Column>
+<Column name="cat_act_cuenta_id" id="3C97F993-DF67-DD3E-73AB-6046D1191490">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>F031172A-B357-C822-59B7-B2E44E763F15</importedID>
+<use>0</use>
+<logicalDatatype>LOGDT011</logicalDatatype>
+<domain>A247AEC6-A7B9-BDB9-845C-FE6D53EF236C</domain>
+<ownDataTypeParameters>,,</ownDataTypeParameters>
+<autoIncrementCycle>false</autoIncrementCycle>
+<associations>
+<colAssociation fkAssociation="7B9C24BA-28A3-64B5-8E2F-B86FCE8D4721" referredColumn="DD8694CA-67F2-3BA0-095E-06A70C7B1557"/>
+</associations>
+</Column>
+</columns>
+<indexes itemClass="oracle.dbtools.crest.model.design.relational.Index">
+<ind_PK_UK id="6FD16192-7A6D-CC17-48C9-0C0A62A64211" name="relation_16_pk">
+<sourceDDLFile>diagrama.sql</sourceDDLFile>
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<importedID>A73266D2-CD58-D876-81A0-8630B8A08B61</importedID>
+<pk>true</pk>
+<indexState>Primary Constraint</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="134120FF-3FE5-99E6-603E-60E5BBA90035"/>
+<colUsage columnID="08688FFA-DBBE-0DE5-DA72-1BF406F8B4AB"/>
+<colUsage columnID="3C97F993-DF67-DD3E-73AB-6046D1191490"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="0F7A725B-2068-06D7-4AD2-136629C48356" name="relation_16_activos_fk">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="134120FF-3FE5-99E6-603E-60E5BBA90035"/>
+<colUsage columnID="08688FFA-DBBE-0DE5-DA72-1BF406F8B4AB"/>
+</indexColumnUsage>
+</ind_PK_UK>
+<ind_PK_UK id="4F5CD3EE-AB30-5FC5-E377-9B13F56B2EAE" name="relation_16_cat_act_fk">
+<createdBy>Usuario</createdBy>
+<createdTime>2025-04-04 19:06:13 UTC</createdTime>
+<ownerDesignName>diagrama</ownerDesignName>
+<indexState>Foreign Key</indexState>
+<isSurrogateKey>false</isSurrogateKey>
+<indexColumnUsage>
+<colUsage columnID="B33A7E93-C951-E5EC-C922-3E32C0441A21"/>
+<colUsage columnID="3C97F993-DF67-DD3E-73AB-6046D1191490"/>
+</indexColumnUsage>
+</ind_PK_UK>
+</indexes>
+</Table>
