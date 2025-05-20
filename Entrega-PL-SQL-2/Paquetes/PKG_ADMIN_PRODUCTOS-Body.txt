@@ -110,7 +110,7 @@ FUNCTION F_NUM_CATEGORIAS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
         -- Contar las categorías asociadas a la cuenta
         SELECT COUNT(*)
         INTO v_num_categorias_cuenta
-        FROM categorias
+        FROM categoria
         WHERE cuenta_id = p_cuenta_id;
 
         RETURN v_num_categorias_cuenta;
