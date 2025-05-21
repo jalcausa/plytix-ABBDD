@@ -1,7 +1,7 @@
 create or replace PACKAGE BODY PKG_ADMIN_PRODUCTOS AS
 
 FUNCTION F_USUARIO_ACCESO_CUENTA (p_nombreusuario IN USUARIO.NOMBREUSUARIO%TYPE,
-  p_cuenta_id IN CUENTA.ID%TYPE)RETURN NUMBER AS
+  p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
     v_count NUMBER;
   BEGIN
     SELECT COUNT(*)
@@ -138,5 +138,101 @@ p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) RETURN BOOLEAN AS
             RAISE;
         END;
   END F_VALIDAR_ATRIBUTOS_PRODUCTO;
+
+-- Ejercicio 6
+PROCEDURE P_ASOCIAR_ACTIVO_A_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE,
+p_producto_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE, p_activo_id IN ACTIVO.ID%TYPE,
+p_activo_cuenta_id IN ACTIVO.CUENTA_ID%TYPE) AS 
+    v_existe NUMBER;
+    BEGIN
+      -- Comprobar que existe el producto (lanza por defecto NO_DATA_FOUND)
+      SELECT 1 INTO v_existe
+      FROM PRODUCTO
+      WHERE GTIN = p_producto_gtin AND CUENTA_ID = p_producto_cuenta_id;
+
+      -- Comprobar que el activo existe (lanza por defecto NO_DATA_FOUND)
+      SELECT 1 INTO v_existe
+      FROM ACTIVO
+      WHERE ID = p_activo_id and CUENTA_ID = p_activo_cuenta_id;
+    
+      -- Comprobar que no existe la asociación
+      BEGIN
+        SELECT 1 INTO v_existe
+        FROM PRODUCTO_ACTIVO
+        WHERE PRODUCTO_GTIN = p_producto_gtin AND PRODUCTO_CUENTA_ID = p_producto_cuenta_id
+         AND ACTIVO_ID = p_activo_id AND ACTIVO_CUENTA_ID = p_activo_cuenta_id;
+
+        -- Si la asociación ya existe (está duplicada), lanza una excepcion del tipo EXCEPTION_ASOCIACION_DUPLICADA;
+        RAISE EXCEPTION_ASOCIACION_DUPLICADA;
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+          NULL; -- Como no existe la asociación, no hacemos nada y la añadimos después
+      END;
+
+      -- Insertar la nueva asociación
+      INSERT INTO PRODUCTO_ACTIVO(PRODUCTO_GTIN, PRODUCTO_CUENTA_ID, ACTIVO_ID, 
+      ACTIVO_CUENTA_ID) VALUES (p_producto_gtin, p_producto_cuenta_id, p_activo_id, p_activo_cuenta_id);
+
+      EXCEPTION
+        WHEN EXCEPTION_ASOCIACION_DUPLICADA THEN
+         DECLARE
+           Vmensaje VARCHAR2(500);
+          BEGIN
+          Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
+          DBMS_OUTPUT.PUT_LINE(Vmensaje);
+          INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
+          RAISE;
+        END;
+
+        WHEN OTHERS THEN
+          DECLARE
+            Vmensaje VARCHAR2(500);
+          BEGIN
+            Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
+            DBMS_OUTPUT.PUT_LINE(Vmensaje);
+            INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
+            RAISE;
+        END;
+END P_ASOCIAR_ACTIVO_A_PRODUCTO;
+
+-- Ejercicio 7
+PROCEDURE P_ELIMINAR_PRODUCTO_Y_ASOCIACIONES(p_producto_gtin IN PRODUCTO.GTIN%TYPE,
+p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) AS 
+    v_existe NUMBER;
+    BEGIN
+      -- Comprobar que el producto existe (lanza por defecto NO_DATA_FOUND)
+      SELECT 1 INTO v_existe
+      FROM PRODUCTO
+      WHERE GTIN = p_producto_gtin AND CUENTA_ID = p_cuenta_id;
+        
+      -- Eliminar asociaciones en el orden correcto, evitando violacions de FK
+      DELETE FROM PRODUCTO_ACTIVO
+      WHERE PRODUCTO_GTIN = p_producto_gtin AND PRODUCTO_CUENTA_ID = p_cuenta_id;
+
+      DELETE FROM ATRIBUTO_PRODUCTO
+      WHERE PRODUCTO_GTIN = p_producto_gtin AND PRODUCTO_CUENTA_ID = p_cuenta_id;
+
+      DELETE FROM PRODUCTO_CATEGORIA
+      WHERE PRODUCTO_GTIN = p_producto_gtin AND PRODUCTO_CUENTA_ID = p_cuenta_id;
+
+      DELETE FROM RELACIONADO
+      WHERE (PRODUCTO_GTIN = p_producto_gtin AND PRODUCTO_CUENTA_ID = p_cuenta_id)
+        OR (PRODUCTO_GTIN1 = p_producto_gtin AND PRODUCTO_CUENTA_ID1 = p_cuenta_id);
+        
+      -- Eliminar el producto
+      DELETE FROM PRODUCTO
+      WHERE GTIN = p_producto_gtin AND CUENTA_ID = p_cuenta_id;
+      
+    EXCEPTION
+      WHEN OTHERS THEN
+        DECLARE
+          Vmensaje VARCHAR2(500);
+        BEGIN
+          Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
+          DBMS_OUTPUT.PUT_LINE(Vmensaje);
+          INSERT INTO TRAZA VALUES(SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
+          RAISE;
+        END;
+END P_ELIMINAR_PRODUCTO_Y_ASOCIACIONES;
 
 END PKG_ADMIN_PRODUCTOS;
