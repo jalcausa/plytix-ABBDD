@@ -73,4 +73,66 @@ FUNCTION  F_VALIDAR_PLAN_SUFICIENTE(p_cuenta_id IN CUENTA.ID%TYPE) RETURN VARCHA
         END;
   END F_VALIDAR_PLAN_SUFICIENTE;
 
+-- Procedimiento 2
+PROCEDURE P_REPLICAR_ATRIBUTOS(p_cuenta_id IN CUENTA.ID%TYPE, 
+p_producto_gtin_origen IN PRODUCTO.GTIN%TYPE, p_producto_gtin_destino IN PRODUCTO.GTIN%TYPE)
+AS
+    CURSOR c_atributos_origen IS
+        SELECT ATRIBUTO_ID, ATRIBUTO_CUENTA_ID, VALOR
+        FROM ATRIBUTO_PRODUCTO
+        WHERE PRODUCTO_GTIN = p_producto_gtin_origen
+            AND PRODUCTO_CUENTA_ID = p_cuenta_id;
+    
+    v_existe NUMBER;
+BEGIN
+    -- Comprobar que el producto origen existe (lanza por defecto NO_DATA_FOUND)
+    SELECT 1 INTO v_existe
+    FROM PRODUCTO
+    WHERE GTIN = p_producto_gtin_origen AND CUENTA_ID = p_cuenta_id;
+
+    -- Comprobar que el producto destino existe (lanza por defecto NO_DATA_FOUND)
+    SELECT 1 INTO v_existe
+    FROM PRODUCTO
+    WHERE GTIN = p_producto_gtin_destino AND CUENTA_ID = p_cuenta_id;
+
+    -- Iterar sobre los atributos del producto origen
+    FOR r IN c_atributos_origen LOOP
+        BEGIN
+            -- Comprobar si existe el atributo en el producto destino
+            SELECT 1 INTO v_existe
+            FROM ATRIBUTO_PRODUCTO
+            WHERE PRODUCTO_GTIN = p_producto_gtin_destino
+                AND PRODUCTO_CUENTA_ID = p_cuenta_id
+                AND ATRIBUTO_ID = r.ATRIBUTO_ID
+                AND ATRIBUTO_CUENTA_ID = r.ATRIBUTO_CUENTA_ID;
+            
+            -- Si existe, se actualiza el valor
+            UPDATE ATRIBUTO_PRODUCTO
+            SET VALOR = r.VALOR
+            WHERE PRODUCTO_GTIN = p_producto_gtin_destino
+                AND PRODUCTO_CUENTA_ID = p_cuenta_id
+                AND ATRIBUTO_ID = r.ATRIBUTO_ID
+                AND ATRIBUTO_CUENTA_ID = r.ATRIBUTO_CUENTA_ID;
+        
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                -- Si no existe, se inserta
+                INSERT INTO ATRIBUTO_PRODUCTO(VALOR, PRODUCTO_GTIN, ATRIBUTO_ID, 
+                PRODUCTO_CUENTA_ID, ATRIBUTO_CUENTA_ID) VALUES (r.valor, 
+                p_producto_gtin_destino, r.ATRIBUTO_ID, p_cuenta_id, r.ATRIBUTO_CUENTA_ID);
+        END;
+    END LOOP;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        DECLARE
+            Vmensaje VARCHAR2(500);
+        BEGIN
+            Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
+            DBMS_OUTPUT.PUT_LINE(Vmensaje);
+            INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
+            RAISE;
+        END;
+END P_REPLICAR_ATRIBUTOS;
+
 END PKG_ADMIN_PRODUCTOS_AVANZADO;
