@@ -1,0 +1,76 @@
+CREATE OR REPLACE
+PACKAGE BODY PKG_ADMIN_PRODUCTOS_AVANZADO AS
+
+FUNCTION  F_VALIDAR_PLAN_SUFICIENTE(p_cuenta_id IN CUENTA.ID%TYPE) RETURN VARCHAR2 AS
+    -- Variables para almacenar los límites del plan
+    v_plan                    PLAN%ROWTYPE;
+    
+    -- Variables para almacenar los conteos actuales
+    v_count_productos         NUMBER;
+    v_count_activos           NUMBER;
+    v_count_cat_producto      NUMBER;
+    v_count_cat_activos       NUMBER;
+    v_count_relaciones        NUMBER;
+    
+  BEGIN
+    
+    v_plan := PKG_ADMIN_PRODUCTOS.F_OBTENER_PLAN_CUENTA(p_cuenta_id);
+    -- Contar productos
+    SELECT COUNT(*)
+    INTO v_count_productos
+    FROM PRODUCTO
+    WHERE CUENTA_ID = p_cuenta_id;
+    
+    -- Contar activos
+    SELECT COUNT(*)
+    INTO v_count_activos
+    FROM ACTIVO
+    WHERE CUENTA_ID = p_cuenta_id;
+    
+    -- Contar categorías de producto
+    SELECT COUNT(*)
+    INTO v_count_cat_producto
+    FROM CATEGORIA
+    WHERE CUENTA_ID = p_cuenta_id;
+    
+    -- Contar categorías de activos
+    SELECT COUNT(*)
+    INTO v_count_cat_activos
+    FROM CATEGORIA_ACTIVO
+    WHERE CUENTA_ID = p_cuenta_id;
+    
+    -- Contar relaciones
+    SELECT COUNT(*)
+    INTO v_count_relaciones
+    FROM RELACIONADO r
+    JOIN PRODUCTO p ON r.PRODUCTO_GTIN = p.GTIN AND r.PRODUCTO_CUENTA_ID = p.CUENTA_ID
+    WHERE p.CUENTA_ID = p_cuenta_id;
+    
+    -- Comparar los conteos con los límites del plan
+    IF v_count_productos > v_plan.PRODUCTOS THEN
+        RETURN 'INSUFICIENTE: PRODUCTOS';
+    ELSIF v_count_activos > v_plan.ACTIVOS THEN
+        RETURN 'INSUFICIENTE: ACTIVOS';
+    ELSIF v_count_cat_producto > v_plan.CATEGORIASPRODUCTO THEN
+        RETURN 'INSUFICIENTE: CATEGORIASPRODUCTO';
+    ELSIF v_count_cat_activos > v_plan.CATEGORIASACTIVOS THEN
+        RETURN 'INSUFICIENTE: CATEGORIASACTIVOS';
+    ELSIF v_count_relaciones > v_plan.RELACIONES THEN
+        RETURN 'INSUFICIENTE: RELACIONES';
+    ELSE
+        RETURN 'SUFICIENTE';
+    END IF;
+    
+  EXCEPTION
+    WHEN OTHERS THEN
+        DECLARE
+            Vmensaje varchar2(500);
+        BEGIN
+            Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
+            DBMS_OUTPUT.PUT_LINE(Vmensaje);
+            insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+            RAISE;
+        END;
+  END F_VALIDAR_PLAN_SUFICIENTE;
+
+END PKG_ADMIN_PRODUCTOS_AVANZADO;

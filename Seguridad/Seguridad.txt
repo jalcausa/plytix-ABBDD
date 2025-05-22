@@ -1,0 +1,6 @@
+-- Tenemos que tener configurado correctamente TDE como se indica
+-- en las diapositivas del tema de seguridad y en la práctica 2
+ALTER TABLE usuario MODIFY (telefono ENCRYPT);
+
+-- Para ver las columnas encriptadas: como SYSTEM:
+SELECT * FROM DBA_ENCRYPTED_COLUMNS;
