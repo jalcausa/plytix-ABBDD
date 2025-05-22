@@ -25,83 +25,79 @@ END;
 
 -- 3. Procedimiento para ejecutar todos los tests de F_LISTA_CATEGORIAS_PRODUCTO
 CREATE OR REPLACE PROCEDURE P_RUN_TESTS_F_LISTA_CATEGORIAS_PRODUCTO AS
-  v_result VARCHAR2(4000);
+    v_resultado VARCHAR2(4000);
 BEGIN
+    -- Test 1: Producto con varias categorías
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(90, 27);
+        IF v_resultado LIKE '%Tecnología%' AND v_resultado LIKE '%Mobiliario%' AND v_resultado LIKE '%Vehículos%' THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - varias categorías', 'OK', v_resultado);
+        ELSE
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - varias categorías', 'FAIL', 'Resultado: ' || v_resultado);
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - varias categorías', 'FAIL', SQLERRM);
+    END;
 
-  -- Test 1: Producto válido con varias categorías
-  BEGIN
-    v_result := PKG_ADMIN_PRODUCTOS.F_LISTA_CATEGORIAS_PRODUCTO('1234567890123', 1001);
-    -- Asumimos que debe devolver algo parecido a "Electrónica ; Móviles ; Regalo día de la Madre"
-    IF INSTR(v_result, 'Electrónica') > 0 AND INSTR(v_result, 'Móviles') > 0 THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto válido con categorías', 'OK', 'Categorías obtenidas: ' || v_result);
-    ELSE
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto válido con categorías', 'FAIL', 'Categorías inesperadas: ' || v_result);
-    END IF;
-  EXCEPTION
-    WHEN OTHERS THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto válido con categorías', 'FAIL', SQLERRM);
-  END;
+    -- Test 2: Producto sin categorías
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(91, 27);
+        IF v_resultado = 'Sin categoría' THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin categorías', 'OK', 'Resultado esperado');
+        ELSE
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin categorías', 'FAIL', 'Se obtuvo: ' || v_resultado);
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin categorías', 'FAIL', SQLERRM);
+    END;
 
-  -- Test 2: Producto válido sin categorías asignadas
-  BEGIN
-    v_result := PKG_ADMIN_PRODUCTOS.F_LISTA_CATEGORIAS_PRODUCTO('9876543210987', 1001);
-    IF v_result = 'Sin categoría' OR v_result IS NULL OR TRIM(v_result) = '' THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto válido sin categorías', 'OK', 'Resultado esperado: ' || NVL(v_result, 'NULL'));
-    ELSE
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto válido sin categorías', 'FAIL', 'Resultado inesperado: ' || v_result);
-    END IF;
-  EXCEPTION
-    WHEN OTHERS THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto válido sin categorías', 'FAIL', SQLERRM);
-  END;
+    -- Test 3: Producto inexistente
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(9999999999999, 27);
+        P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto inexistente', 'FAIL', 'NO_DATA_FOUND no lanzada');
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto inexistente', 'OK', 'Excepción capturada correctamente');
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto inexistente', 'FAIL', SQLERRM);
+    END;
 
-  -- Test 3: Producto inexistente (debe lanzar NO_DATA_FOUND)
-  BEGIN
-    v_result := PKG_ADMIN_PRODUCTOS.F_LISTA_CATEGORIAS_PRODUCTO('0000000000000', 1001);
-    -- Si no lanza excepción, test falla
-    P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto inexistente', 'FAIL', 'No se lanzó NO_DATA_FOUND');
-  EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto inexistente', 'OK', 'Excepción NO_DATA_FOUND capturada correctamente');
-    WHEN OTHERS THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto inexistente', 'FAIL', SQLERRM);
-  END;
+    -- Test 4: Cuenta incorrecta para GTIN válido
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(90, 1);
+        P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - cuenta incorrecta', 'FAIL', 'NO_DATA_FOUND no lanzada');
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - cuenta incorrecta', 'OK', 'Excepción capturada correctamente');
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - cuenta incorrecta', 'FAIL', SQLERRM);
+    END;
 
-  -- Test 4: Cuenta inválida para producto existente (debe lanzar NO_DATA_FOUND)
-  BEGIN
-    v_result := PKG_ADMIN_PRODUCTOS.F_LISTA_CATEGORIAS_PRODUCTO('1234567890123', 9999);
-    P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - cuenta inválida', 'FAIL', 'No se lanzó NO_DATA_FOUND');
-  EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - cuenta inválida', 'OK', 'Excepción NO_DATA_FOUND capturada');
-    WHEN OTHERS THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - cuenta inválida', 'FAIL', SQLERRM);
-  END;
-
-  -- Test 5: Usuario sin acceso a la cuenta (debe lanzar EXCEPTION_SIN_ACCESO_CUENTA)
-  BEGIN
-    v_result := PKG_ADMIN_PRODUCTOS.F_LISTA_CATEGORIAS_PRODUCTO('1234567890123', 2001);
-    P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin acceso a la cuenta', 'FAIL', 'No se lanzó EXCEPTION_SIN_ACCESO_CUENTA');
-  EXCEPTION
-    WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin acceso a la cuenta', 'OK', 'Excepción capturada correctamente');
-    WHEN OTHERS THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin acceso a la cuenta', 'FAIL', SQLERRM);
-  END;
-
-  -- Test 6: Verificar que concatenación tiene separadores correctos
-  BEGIN
-    v_result := PKG_ADMIN_PRODUCTOS.F_LISTA_CATEGORIAS_PRODUCTO('1234567890123', 1001);
-    IF INSTR(v_result, ' ; ') > 0 THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - formato concatenación categorías', 'OK', 'Separadores presentes en resultado: ' || v_result);
-    ELSE
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - formato concatenación categorías', 'FAIL', 'Separadores no encontrados: ' || v_result);
-    END IF;
-  EXCEPTION
-    WHEN OTHERS THEN
-      P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - formato concatenación categorías', 'FAIL', SQLERRM);
-  END;
-
+    -- Test 5: Sin acceso a la cuenta
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(90, 3);
+        P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin acceso', 'FAIL', 'EXCEPTION_SIN_ACCESO_CUENTA no lanzada');
+    EXCEPTION
+        WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin acceso', 'OK', 'Excepción capturada correctamente');
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin acceso', 'FAIL', SQLERRM);
+    END;
+    
+    -- Test 6: Producto con una única categoría
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(92, 2);  -- GTIN 92 con 1 categoría en la cuenta 27
+        IF v_resultado = 'Inmuebles' THEN  -- Asumiendo que la única categoría es 'Electrónica'
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - una sola categoría', 'OK', v_resultado);
+        ELSE
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - una sola categoría', 'FAIL', 'Resultado inesperado: ' || v_resultado);
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - una sola categoría', 'FAIL', SQLERRM);
+    END;
 END;
 /
 
