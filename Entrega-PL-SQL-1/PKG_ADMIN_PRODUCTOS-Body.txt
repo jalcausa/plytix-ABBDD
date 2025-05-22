@@ -11,7 +11,7 @@ FUNCTION F_USUARIO_ACCESO_CUENTA (p_nombreusuario IN USUARIO.NOMBREUSUARIO%TYPE,
        AND cuenta_id = p_cuenta_id;
     RETURN CASE WHEN v_count > 0 THEN 1 ELSE 0 END;
   END F_USUARIO_ACCESO_CUENTA;
-  
+
 
 FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYPE AS
     v_cuenta CUENTA%ROWTYPE;
@@ -21,13 +21,13 @@ FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYP
     -- Comprobar que existe la cuenta que nos pasan como parámetro:
     -- Laza NO_DATA_FOUND por defecto si no existe
     SELECT * INTO v_cuenta FROM CUENTA WHERE ID = p_cuenta_id;
-    
+
     -- Comprobar que el usuario tiene acceso a la cuenta
     -- Si no tiene acceso lanzar la excepción personalizada EXCEPTION_SIN_ACCESO_CUENTA;
     IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
       RAISE EXCEPTION_SIN_ACCESO_CUENTA;
     END IF;
-    
+
     -- Obtener el plan_id de la cuenta que nos pasan como parámetro
     -- i no tiene plan asociado lanzar la excepcion personalizada EXCEPTION_PLAN_NO_ASIGNADO
     BEGIN
@@ -36,10 +36,10 @@ FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYP
       WHEN NO_DATA_FOUND THEN
         RAISE EXCEPTION_PLAN_NO_ASIGNADO;
     END;    
-    
+
     -- Obtener la fila completa del plan
     SELECT * INTO v_plan FROM PLAN WHERE ID = v_plan_id;
-    
+
     RETURN v_plan;
 
   EXCEPTION
@@ -53,7 +53,7 @@ FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYP
             RAISE;
         END;
   END F_OBTENER_PLAN_CUENTA;
-  
+
 FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
     v_count NUMBER;
     v_cuenta CUENTA%ROWTYPE;
@@ -61,17 +61,17 @@ FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER 
         -- Comprobar que existe la cuenta que nos pasan como parámetro:
         -- Laza NO_DATA_FOUND por defecto si no existe
         SELECT * INTO v_cuenta FROM CUENTA WHERE ID = p_cuenta_id;
-    
+
         -- Comprobar que el usuario tiene acceso a la cuenta
         -- Si no tiene acceso lanzar la excepción personalizada EXCEPTION_SIN_ACCESO_CUENTA;
         IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
           RAISE EXCEPTION_SIN_ACCESO_CUENTA;
         END IF;
-        
+
         SELECT COUNT (*) INTO v_count
             FROM PRODUCTO
             WHERE CUENTA_ID = p_cuenta_id;
-        
+
         RETURN v_count;    
     EXCEPTION
     WHEN OTHERS THEN
@@ -140,9 +140,14 @@ PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_
     BEGIN
 
         -- Validacion del nombre
-        IF p_nuevo_nombre IS NULL OR TRIM(p_nuevo_nombre) = '' THEN
+        IF p_nuevo_nombre IS NULL OR TRIM(p_nuevo_nombre) IS NULL THEN
             RAISE INVALID_DATA;
         END IF;
+        
+        /*
+         * TRIM(' ') -> '', que oracle
+         * convierte a null automaticamente
+         */
 
         -- Verificar que el usuario tiene acceso a la cuenta
         IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
@@ -184,5 +189,5 @@ PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_
                 RAISE;
             END;
   END P_ACTUALIZAR_NOMBRE_PRODUCTO;
-  
+
 END PKG_ADMIN_PRODUCTOS;

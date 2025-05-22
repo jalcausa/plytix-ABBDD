@@ -24,12 +24,12 @@ END;
 /
 
 -- 3. Procedimiento que ejecuta todas las pruebas
-CREATE OR REPLACE PROCEDURE P_RUN_ALL_TESTS AS
+create or replace PROCEDURE P_RUN_ALL_TESTS AS
     v_result NUMBER;
 BEGIN
-    -- Test 1: Cuenta válida con categorías
+    -- Test 1: Cuenta válida con categorías (cuenta 1, espera 3 categorías)
     BEGIN
-        v_result := PKG_ADMIN_PRODUCTOS.F_NUM_CATEGORIAS_CUENTA(1001);
+        v_result := PKG_ADMIN_PRODUCTOS.F_NUM_CATEGORIAS_CUENTA(27);
         IF v_result = 3 THEN
             P_INSERTAR_RESULTADO_TEST('F_NUM_CATEGORIAS_CUENTA - cuenta válida', 'OK', 'Resultado esperado: 3');
         ELSE
@@ -40,9 +40,9 @@ BEGIN
             P_INSERTAR_RESULTADO_TEST('F_NUM_CATEGORIAS_CUENTA - cuenta válida', 'FAIL', SQLERRM);
     END;
 
-    -- Test 2: Cuenta sin categorías
+    -- Test 2: Cuenta sin categorías (cuenta 2)
     BEGIN
-        v_result := PKG_ADMIN_PRODUCTOS.F_NUM_CATEGORIAS_CUENTA(1002);
+        v_result := PKG_ADMIN_PRODUCTOS.F_NUM_CATEGORIAS_CUENTA(1);
         IF v_result = 0 THEN
             P_INSERTAR_RESULTADO_TEST('F_NUM_CATEGORIAS_CUENTA - sin categorías', 'OK', 'Resultado esperado: 0');
         ELSE
@@ -53,7 +53,7 @@ BEGIN
             P_INSERTAR_RESULTADO_TEST('F_NUM_CATEGORIAS_CUENTA - sin categorías', 'FAIL', SQLERRM);
     END;
 
-    -- Test 3: Cuenta inexistente
+    -- Test 3: Cuenta inexistente (9999)
     BEGIN
         v_result := PKG_ADMIN_PRODUCTOS.F_NUM_CATEGORIAS_CUENTA(9999);
         P_INSERTAR_RESULTADO_TEST('F_NUM_CATEGORIAS_CUENTA - cuenta inexistente', 'FAIL', 'No se lanzó NO_DATA_FOUND');
@@ -64,9 +64,9 @@ BEGIN
             P_INSERTAR_RESULTADO_TEST('F_NUM_CATEGORIAS_CUENTA - cuenta inexistente', 'FAIL', SQLERRM);
     END;
 
-    -- Test 4: Sin acceso a la cuenta
+    -- Test 4: Sin acceso a la cuenta (cuenta 3)
     BEGIN
-        v_result := PKG_ADMIN_PRODUCTOS.F_NUM_CATEGORIAS_CUENTA(2001);
+        v_result := PKG_ADMIN_PRODUCTOS.F_NUM_CATEGORIAS_CUENTA(3);
         P_INSERTAR_RESULTADO_TEST('F_NUM_CATEGORIAS_CUENTA - sin acceso', 'FAIL', 'No se lanzó EXCEPTION_SIN_ACCESO_CUENTA');
     EXCEPTION
         WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
@@ -75,9 +75,9 @@ BEGIN
             P_INSERTAR_RESULTADO_TEST('F_NUM_CATEGORIAS_CUENTA - sin acceso', 'FAIL', SQLERRM);
     END;
 
-    -- Test 5: Actualización correcta
+    -- Test 5: Actualización correcta (GTIN válido, cuenta 1)
     BEGIN
-        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO('1234567890123', 1001, 'Nuevo nombre');
+        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO(90, 27, 'Doble Elefante Telépata de Guerra');
         P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_NOMBRE_PRODUCTO - correcto', 'OK', 'Nombre actualizado');
     EXCEPTION
         WHEN OTHERS THEN
@@ -86,7 +86,7 @@ BEGIN
 
     -- Test 6: GTIN inválido
     BEGIN
-        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO('9999999999999', 1001, 'Nombre');
+        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO('9999999999999', 1, 'Nombre');
         P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_NOMBRE_PRODUCTO - GTIN inválido', 'FAIL', 'NO_DATA_FOUND no lanzada');
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
@@ -97,7 +97,7 @@ BEGIN
 
     -- Test 7: Nombre NULL
     BEGIN
-        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO('1234567890123', 1001, NULL);
+        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO(28, 27, NULL);
         P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_NOMBRE_PRODUCTO - nombre NULL', 'FAIL', 'INVALID_DATA no lanzada');
     EXCEPTION
         WHEN PKG_ADMIN_PRODUCTOS.INVALID_DATA THEN
@@ -108,7 +108,7 @@ BEGIN
 
     -- Test 8: Nombre en blanco
     BEGIN
-        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO('1234567890123', 1001, '   ');
+        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO(21, 27, '   ');
         P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_NOMBRE_PRODUCTO - nombre en blanco', 'FAIL', 'INVALID_DATA no lanzada');
     EXCEPTION
         WHEN PKG_ADMIN_PRODUCTOS.INVALID_DATA THEN
@@ -119,7 +119,7 @@ BEGIN
 
     -- Test 9: Cuenta incorrecta
     BEGIN
-        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO('1234567890123', 9999, 'Nombre');
+        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO(44, 1, 'Nombre');
         P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_NOMBRE_PRODUCTO - cuenta inválida', 'FAIL', 'NO_DATA_FOUND no lanzada');
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
@@ -128,9 +128,9 @@ BEGIN
             P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_NOMBRE_PRODUCTO - cuenta inválida', 'FAIL', SQLERRM);
     END;
 
-    -- Test 10: Sin acceso a la cuenta
+    -- Test 10: Sin acceso a la cuenta (cuenta 3)
     BEGIN
-        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO('1234567890123', 2001, 'Nombre');
+        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_NOMBRE_PRODUCTO('1234567890123', 3, 'Nombre');
         P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_NOMBRE_PRODUCTO - sin acceso', 'FAIL', 'EXCEPTION_SIN_ACCESO_CUENTA no lanzada');
     EXCEPTION
         WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
