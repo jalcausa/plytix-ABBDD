@@ -12,5 +12,5 @@ END;
 /*
  * Para probar este job, sustituir
  * la acción actual por la siguiente:
- * BEGIN DELETE FROM TRAZA WHERE fecha < SYSDATE - INTERVAL '1' MINUTE; COMMIT; END;
+ * BEGIN DELETE FROM TRAZA WHERE fecha < SYSDATE - INTERVAL ''1'' MINUTE; COMMIT; END;
  */
