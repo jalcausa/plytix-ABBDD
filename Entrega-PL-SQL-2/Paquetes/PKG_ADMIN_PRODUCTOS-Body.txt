@@ -11,7 +11,7 @@ FUNCTION F_USUARIO_ACCESO_CUENTA (p_nombreusuario IN USUARIO.NOMBREUSUARIO%TYPE,
        AND cuenta_id = p_cuenta_id;
     RETURN CASE WHEN v_count > 0 THEN 1 ELSE 0 END;
   END F_USUARIO_ACCESO_CUENTA;
-
+  
 
 FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYPE AS
     v_cuenta CUENTA%ROWTYPE;
@@ -21,13 +21,13 @@ FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYP
     -- Comprobar que existe la cuenta que nos pasan como parámetro:
     -- Laza NO_DATA_FOUND por defecto si no existe
     SELECT * INTO v_cuenta FROM CUENTA WHERE ID = p_cuenta_id;
-
+    
     -- Comprobar que el usuario tiene acceso a la cuenta
     -- Si no tiene acceso lanzar la excepción personalizada EXCEPTION_SIN_ACCESO_CUENTA;
     IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
       RAISE EXCEPTION_SIN_ACCESO_CUENTA;
     END IF;
-
+    
     -- Obtener el plan_id de la cuenta que nos pasan como parámetro
     -- i no tiene plan asociado lanzar la excepcion personalizada EXCEPTION_PLAN_NO_ASIGNADO
     BEGIN
@@ -36,10 +36,10 @@ FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYP
       WHEN NO_DATA_FOUND THEN
         RAISE EXCEPTION_PLAN_NO_ASIGNADO;
     END;    
-
+    
     -- Obtener la fila completa del plan
     SELECT * INTO v_plan FROM PLAN WHERE ID = v_plan_id;
-
+    
     RETURN v_plan;
 
   EXCEPTION
@@ -53,7 +53,7 @@ FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYP
             RAISE;
         END;
   END F_OBTENER_PLAN_CUENTA;
-
+  
 FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
     v_count NUMBER;
     v_cuenta CUENTA%ROWTYPE;
@@ -61,17 +61,17 @@ FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER 
         -- Comprobar que existe la cuenta que nos pasan como parámetro:
         -- Laza NO_DATA_FOUND por defecto si no existe
         SELECT * INTO v_cuenta FROM CUENTA WHERE ID = p_cuenta_id;
-
+    
         -- Comprobar que el usuario tiene acceso a la cuenta
         -- Si no tiene acceso lanzar la excepción personalizada EXCEPTION_SIN_ACCESO_CUENTA;
         IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
           RAISE EXCEPTION_SIN_ACCESO_CUENTA;
         END IF;
-
+        
         SELECT COUNT (*) INTO v_count
             FROM PRODUCTO
             WHERE CUENTA_ID = p_cuenta_id;
-
+        
         RETURN v_count;    
     EXCEPTION
     WHEN OTHERS THEN
@@ -87,28 +87,31 @@ FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER 
 
 -- Ejercicio 4
 FUNCTION F_NUM_CATEGORIAS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
-    CURSOR c_categorias IS
-        SELECT 1
-        FROM categoria
-        WHERE cuenta_id = p_cuenta_id;
-
-        v_num_categorias_cuenta NUMBER := 0;
-        v_dummy NUMBER;
+    v_num_categorias_cuenta NUMBER;
+    v_dummy NUMBER;
     BEGIN
-        -- Verificar que la cuenta existe
+        -- Verificar que la cuenta existe (lanza NO_DATA_FOUND si no existe)
         SELECT 1 INTO v_dummy
         FROM cuenta
         WHERE id = p_cuenta_id;
 
-        -- Verificar acceso
+        /*
+         * También podriamos haberlo comprobado
+         * con un EXIST, pero en tal caso tendriamos
+         * que haber elevado la excepcion nosotros mismos;
+         * de esta manera se encarga oracle
+         */
+
+        -- Verificar que el usuario tiene acceso a la cuenta
         IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
             RAISE EXCEPTION_SIN_ACCESO_CUENTA;
         END IF;
 
-        -- Abrir el cursor y contar
-        FOR categoria_rec IN c_categorias LOOP
-            v_num_categorias_cuenta := v_num_categorias_cuenta + 1;
-        END LOOP;
+        -- Contar las categorías asociadas a la cuenta
+        SELECT COUNT(*)
+        INTO v_num_categorias_cuenta
+        FROM categoria
+        WHERE cuenta_id = p_cuenta_id;
 
         RETURN v_num_categorias_cuenta;
 
@@ -140,14 +143,9 @@ PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_
     BEGIN
 
         -- Validacion del nombre
-        IF p_nuevo_nombre IS NULL OR TRIM(p_nuevo_nombre) IS NULL THEN
+        IF p_nuevo_nombre IS NULL OR TRIM(p_nuevo_nombre) = '' THEN
             RAISE INVALID_DATA;
         END IF;
-        
-        /*
-         * TRIM(' ') -> '', que oracle
-         * convierte a null automaticamente
-         */
 
         -- Verificar que el usuario tiene acceso a la cuenta
         IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
@@ -209,58 +207,4 @@ PROCEDURE P_ACTUALIZAR_TODAS_CUENTAS AS
             END;
         END LOOP;
     END P_ACTUALIZAR_TODAS_CUENTAS;
-    
-FUNCTION  F_VALIDAR_ATRIBUTOS_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE,
-p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) RETURN BOOLEAN AS
-    v_cuenta CUENTA%ROWTYPE;
-    v_total_atributos NUMBER;
-    v_total_valores NUMBER;
-    v_existe_producto NUMBER;
-    BEGIN
-        -- Comprobar que existe la cuenta que nos pasan como parámetro:
-        -- Laza NO_DATA_FOUND por defecto si no existe
-        SELECT * INTO v_cuenta FROM CUENTA WHERE ID = p_cuenta_id;
-    
-        -- Comprobar que el usuario tiene acceso a la cuenta
-        -- Si no tiene acceso lanzar la excepción personalizada EXCEPTION_SIN_ACCESO_CUENTA;
-        IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
-          RAISE EXCEPTION_SIN_ACCESO_CUENTA;
-        END IF;
-        
-        -- Verificar que el producto existe
-        SELECT COUNT(*) INTO v_existe_producto
-        FROM PRODUCTO
-        WHERE GTIN = p_producto_gtin
-        AND CUENTA_ID = p_cuenta_id;
-        
-        IF v_existe_producto = 0 THEN
-            RAISE NO_DATA_FOUND;
-        END IF;
-        
-        -- Contar el número total de atributos definidos para esta cuenta
-        SELECT COUNT(*) INTO v_total_atributos
-        FROM ATRIBUTO
-        WHERE CUENTA_ID = p_cuenta_id;
-        
-        -- Contar el número de atributos que tienen valores para este producto
-        SELECT COUNT(DISTINCT ap.ATRIBUTO_ID) INTO v_total_valores
-        FROM ATRIBUTO_PRODUCTO ap
-        WHERE ap.PRODUCTO_GTIN = p_producto_gtin
-        AND ap.PRODUCTO_CUENTA_ID = p_cuenta_id
-        AND ap.ATRIBUTO_CUENTA_ID = p_cuenta_id;
-    
-        -- Verificar si todos los atributos tienen valores asociados
-        RETURN (v_total_valores = v_total_atributos);
-    EXCEPTION
-    WHEN OTHERS THEN
-        DECLARE
-            Vmensaje varchar2(500);
-        BEGIN
-            Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
-            DBMS_OUTPUT.PUT_LINE(Vmensaje);
-            insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
-            RAISE;
-        END;
-  END F_VALIDAR_ATRIBUTOS_PRODUCTO;
-
 END PKG_ADMIN_PRODUCTOS;

@@ -1,0 +1,113 @@
+-- 1. Tabla de resultados de test
+CREATE TABLE TEST_RESULTADOS (
+    id_test       NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_test   VARCHAR2(100),
+    resultado     VARCHAR2(20),
+    mensaje       VARCHAR2(500),
+    fecha         DATE DEFAULT SYSDATE
+);
+
+-- 2. Procedimiento para registrar resultados
+CREATE OR REPLACE PROCEDURE P_INSERTAR_RESULTADO_TEST(
+    p_nombre_test IN VARCHAR2,
+    p_resultado   IN VARCHAR2,
+    p_mensaje     IN VARCHAR2
+) AS
+BEGIN
+    INSERT INTO TEST_RESULTADOS(nombre_test, resultado, mensaje)
+    VALUES (p_nombre_test, p_resultado, p_mensaje);
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error insertando resultado de test: ' || SQLERRM);
+END;
+/
+
+-- 3. Procedimiento que ejecuta todas las pruebas
+CREATE OR REPLACE PROCEDURE P_RUN_TESTS_F_LISTA_CATEGORIAS_PRODUCTO AS
+    v_resultado VARCHAR2(4000);
+BEGIN
+    -- Test 1: Producto con varias categorías
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(90, 27);
+        IF v_resultado LIKE '%Tecnología%' AND v_resultado LIKE '%Mobiliario%' AND v_resultado LIKE '%Vehículos%' THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - varias categorías', 'OK', v_resultado);
+        ELSE
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - varias categorías', 'FAIL', 'Resultado: ' || v_resultado);
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - varias categorías', 'FAIL', SQLERRM);
+    END;
+
+    -- Test 2: Producto sin categorías
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(91, 27);
+        IF v_resultado = 'Sin categoría' THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin categorías', 'OK', 'Resultado esperado');
+        ELSE
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin categorías', 'FAIL', 'Se obtuvo: ' || v_resultado);
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin categorías', 'FAIL', SQLERRM);
+    END;
+
+    -- Test 3: Producto inexistente
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(9999999999999, 27);
+        P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto inexistente', 'FAIL', 'NO_DATA_FOUND no lanzada');
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto inexistente', 'OK', 'Excepción capturada correctamente');
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - producto inexistente', 'FAIL', SQLERRM);
+    END;
+
+    -- Test 4: Cuenta incorrecta para GTIN válido
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(90, 1);
+        P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - cuenta incorrecta', 'FAIL', 'NO_DATA_FOUND no lanzada');
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - cuenta incorrecta', 'OK', 'Excepción capturada correctamente');
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - cuenta incorrecta', 'FAIL', SQLERRM);
+    END;
+
+    -- Test 5: Sin acceso a la cuenta
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(90, 3);
+        P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin acceso', 'FAIL', 'EXCEPTION_SIN_ACCESO_CUENTA no lanzada');
+    EXCEPTION
+        WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin acceso', 'OK', 'Excepción capturada correctamente');
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - sin acceso', 'FAIL', SQLERRM);
+    END;
+    
+    -- Test 6: Producto con una única categoría
+    BEGIN
+        v_resultado := PKG_ADMIN_PRODUCTOS_AVANZADO.F_LISTA_CATEGORIAS_PRODUCTO(92, 2);  -- GTIN 92 con 1 categoría en la cuenta 27
+        IF v_resultado = 'Inmuebles' THEN  -- Asumiendo que la única categoría es 'Electrónica'
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - una sola categoría', 'OK', v_resultado);
+        ELSE
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - una sola categoría', 'FAIL', 'Resultado inesperado: ' || v_resultado);
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('F_LISTA_CATEGORIAS_PRODUCTO - una sola categoría', 'FAIL', SQLERRM);
+    END;
+END;
+/
+
+-- Para ejecutar y ver los resultados
+BEGIN
+    P_RUN_TESTS_F_LISTA_CATEGORIAS_PRODUCTO;
+END;
+/
+
+SELECT * FROM TEST_RESULTADOS ORDER BY fecha DESC;
+
+-- Para borrar todas las filas de la tabla
+TRUNCATE TABLE TEST_RESULTADOS;
