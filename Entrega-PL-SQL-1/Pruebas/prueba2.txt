@@ -1,0 +1,148 @@
+-- 1. Crear tabla temporal para los resultados de test
+CREATE TABLE TEST_RESULTADOS (
+    id_test       NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_test   VARCHAR2(100),
+    resultado     VARCHAR2(20),
+    mensaje       VARCHAR2(500),
+    fecha         DATE DEFAULT SYSDATE
+);
+
+-- 2. Procedimiento para registrar resultados
+CREATE OR REPLACE PROCEDURE P_INSERTAR_RESULTADO_TEST(
+    p_nombre_test IN VARCHAR2,
+    p_resultado   IN VARCHAR2,
+    p_mensaje     IN VARCHAR2
+) AS
+BEGIN
+    INSERT INTO TEST_RESULTADOS(nombre_test, resultado, mensaje)
+    VALUES (p_nombre_test, p_resultado, p_mensaje);
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error insertando resultado de test: ' || SQLERRM);
+END;
+/
+
+-- 3. Procedimiento que ejecuta todas las pruebas
+CREATE OR REPLACE PROCEDURE P_RUN_TESTS_F_CONTAR_PRODUCTOS_CUENTA AS
+    v_result NUMBER;
+BEGIN
+    -- Test 1: Cuenta válida con productos (cuenta con productos)
+    BEGIN
+        v_result := PKG_ADMIN_PRODUCTOS.F_CONTAR_PRODUCTOS_CUENTA(27);
+        IF v_result > 0 THEN
+            P_INSERTAR_RESULTADO_TEST(
+                'F_CONTAR_PRODUCTOS_CUENTA - cuenta con productos', 
+                'OK', 
+                'Resultado obtenido: ' || v_result || ' productos'
+            );
+        ELSE
+            P_INSERTAR_RESULTADO_TEST(
+                'F_CONTAR_PRODUCTOS_CUENTA - cuenta con productos', 
+                'FAIL', 
+                'Se esperaba al menos 1 producto, se obtuvo: ' || v_result
+            );
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST(
+                'F_CONTAR_PRODUCTOS_CUENTA - cuenta con productos', 
+                'FAIL', 
+                SQLERRM
+            );
+    END;
+
+    -- Test 2: Cuenta sin productos
+    BEGIN
+        v_result := PKG_ADMIN_PRODUCTOS.F_CONTAR_PRODUCTOS_CUENTA(6);
+        IF v_result = 0 THEN
+            P_INSERTAR_RESULTADO_TEST(
+                'F_CONTAR_PRODUCTOS_CUENTA - cuenta sin productos', 
+                'OK', 
+                'Resultado esperado: 0'
+            );
+        ELSE
+            P_INSERTAR_RESULTADO_TEST(
+                'F_CONTAR_PRODUCTOS_CUENTA - cuenta sin productos', 
+                'FAIL', 
+                'Se esperaba 0, se obtuvo: ' || v_result
+            );
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST(
+                'F_CONTAR_PRODUCTOS_CUENTA - cuenta sin productos', 
+                'FAIL', 
+                SQLERRM
+            );
+    END;
+
+    -- Test 3: Cuenta inexistente (9999)
+    BEGIN
+        v_result := PKG_ADMIN_PRODUCTOS.F_CONTAR_PRODUCTOS_CUENTA(9999);
+        P_INSERTAR_RESULTADO_TEST(
+            'F_CONTAR_PRODUCTOS_CUENTA - cuenta inexistente', 
+            'FAIL', 
+            'No se lanzó NO_DATA_FOUND'
+        );
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            P_INSERTAR_RESULTADO_TEST(
+                'F_CONTAR_PRODUCTOS_CUENTA - cuenta inexistente', 
+                'OK', 
+                'Excepción NO_DATA_FOUND capturada correctamente'
+            );
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST(
+                'F_CONTAR_PRODUCTOS_CUENTA - cuenta inexistente', 
+                'FAIL', 
+                SQLERRM
+            );
+    END;
+
+    -- Test 4: Sin acceso a la cuenta (cuenta 3)
+	-- Para poder probar este test tenemos que hacerlo desde un usuario que no
+	-- tenga acceso a la cuenta 3
+    BEGIN
+        v_result := PKG_ADMIN_PRODUCTOS.F_CONTAR_PRODUCTOS_CUENTA(3);
+        P_INSERTAR_RESULTADO_TEST(
+            'F_CONTAR_PRODUCTOS_CUENTA - sin acceso', 
+            'FAIL', 
+            'No se lanzó EXCEPTION_SIN_ACCESO_CUENTA'
+        );
+    EXCEPTION
+        WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
+            P_INSERTAR_RESULTADO_TEST(
+                'F_CONTAR_PRODUCTOS_CUENTA - sin acceso', 
+                'OK', 
+                'Excepción EXCEPTION_SIN_ACCESO_CUENTA capturada correctamente'
+            );
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST(
+                'F_CONTAR_PRODUCTOS_CUENTA - sin acceso', 
+                'FAIL', 
+                SQLERRM
+            );
+    END;
+END;
+/
+
+-- 4. Ejecutar las pruebas
+BEGIN
+    P_RUN_TESTS_F_CONTAR_PRODUCTOS_CUENTA;
+END;
+/
+
+-- 5. Mostrar resultados
+SELECT 
+    TO_CHAR(fecha, 'YYYY-MM-DD HH24:MI:SS') as fecha_test,
+    nombre_test,
+    resultado,
+    mensaje
+FROM TEST_RESULTADOS 
+ORDER BY fecha DESC;
+
+-- 6. Limpiar objetos temporales
+DROP PROCEDURE P_INSERTAR_RESULTADO_TEST;
+DROP PROCEDURE P_RUN_TESTS_F_CONTAR_PRODUCTOS_CUENTA;
+DROP TABLE TEST_RESULTADOS PURGE;
