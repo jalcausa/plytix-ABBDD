@@ -1,0 +1,101 @@
+-- 1. Tabla de resultados de test
+CREATE TABLE TEST_RESULTADOS (
+    id_test       NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_test   VARCHAR2(100),
+    resultado     VARCHAR2(20),
+    mensaje       VARCHAR2(500),
+    fecha         DATE DEFAULT SYSDATE
+);
+
+-- 2. Procedimiento para insertar resultados
+CREATE OR REPLACE PROCEDURE P_INSERTAR_RESULTADO_TEST(
+    p_nombre_test IN VARCHAR2,
+    p_resultado   IN VARCHAR2,
+    p_mensaje     IN VARCHAR2
+) AS
+BEGIN
+    INSERT INTO TEST_RESULTADOS(nombre_test, resultado, mensaje)
+    VALUES (p_nombre_test, p_resultado, p_mensaje);
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error insertando resultado de test: ' || SQLERRM);
+END;
+/
+
+-- P_ACTUALIZAR_PRODUCTOS
+CREATE OR REPLACE PROCEDURE P_RUN_TESTS_P_ACTUALIZAR_PRODUCTOS AS
+    v_id_cuenta CUENTA.ID%type;
+BEGIN
+    -- Test 1: Cuenta válida con productos en s_producto
+    BEGIN
+        SELECT id INTO v_id_cuenta
+        FROM (
+            SELECT id
+            FROM cuenta
+            WHERE id IN (
+                SELECT DISTINCT cuenta_id
+                FROM producto_ext
+                WHERE cuenta_id IS NOT NULL
+            )
+            ORDER BY id
+        )
+        FETCH FIRST 1 ROWS ONLY;
+        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_PRODUCTOS(v_id_cuenta);
+        P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_PRODUCTOS - cuenta válida', 'OK', 'Sin errores');
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_PRODUCTOS - cuenta válida', 'FAIL', SQLERRM);
+    END;
+
+    -- Test 2: Cuenta sin productos en s_producto (no debería fallar)
+    BEGIN
+        SELECT id INTO v_id_cuenta
+        FROM (
+            SELECT id
+            FROM cuenta
+            WHERE id NOT IN (
+                SELECT DISTINCT cuenta_id
+                FROM producto_ext
+                WHERE cuenta_id IS NOT NULL
+            )
+            ORDER BY id
+        )
+        FETCH FIRST 1 ROWS ONLY;
+        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_PRODUCTOS(v_id_cuenta);
+        P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_PRODUCTOS - sin productos externos', 'OK', 'Procesado sin errores');
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_PRODUCTOS - sin productos externos', 'FAIL', SQLERRM);
+    END;
+
+    -- Test 3: Cuenta con productos no coincidentes en nombre
+    BEGIN
+        -- TODO: Encontrar un id que verifique lo siguiente, el 27 es por probar
+        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_PRODUCTOS(27);
+        P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_PRODUCTOS - productos con nombre diferente', 'OK', 'Nombres actualizados');
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_PRODUCTOS - productos con nombre diferente', 'FAIL', SQLERRM);
+    END;
+
+    -- Test 4: Cuenta nula
+    BEGIN
+        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_PRODUCTOS(NULL);
+        P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_PRODUCTOS - cuenta NULL', 'FAIL', 'No se lanzó excepción esperada');
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_PRODUCTOS - cuenta NULL', 'OK', SQLERRM);
+    END;
+
+    -- Test 5: Cuenta con productos antiguos en producto pero no en s_producto (debería eliminar)
+    BEGIN
+        -- TODO: Encontrar un id que verifique lo siguiente, el 27 es por probar
+        PKG_ADMIN_PRODUCTOS.P_ACTUALIZAR_PRODUCTOS(27);
+        P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_PRODUCTOS - eliminación de productos', 'OK', 'Productos eliminados correctamente');
+    EXCEPTION
+        WHEN OTHERS THEN
+            P_INSERTAR_RESULTADO_TEST('P_ACTUALIZAR_PRODUCTOS - eliminación de productos', 'FAIL', SQLERRM);
+    END;
+END;
+/

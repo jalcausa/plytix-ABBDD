@@ -69,6 +69,17 @@ END SOLO_USER_ATRIB;
 -- Como SYS si no se ha hecho ya:
 -- GRANT EXECUTE ON DBMS_RLS TO PLYTIX
 -- Aplicar la política de seguridad
+BEGIN
+  DBMS_RLS.ADD_POLICY(
+    OBJECT_SCHEMA   => 'PLYTIX',
+    OBJECT_NAME     => 'ATRIBUTO',
+    POLICY_NAME     => 'POL_SOLO_USER_ATRIB',
+    FUNCTION_SCHEMA => 'PLYTIX',
+    POLICY_FUNCTION => 'SOLO_USER_ATRIB',
+    STATEMENT_TYPES => 'SELECT, UPDATE, DELETE'
+  );
+END;
+/
 -- Para borrar la política:
 /*
 BEGIN
@@ -80,16 +91,7 @@ BEGIN
 END;
 /
 */
-BEGIN
-  DBMS_RLS.ADD_POLICY(
-    OBJECT_SCHEMA   => 'PLYTIX',
-    OBJECT_NAME     => 'ATRIBUTO',
-    POLICY_NAME     => 'POL_SOLO_USER_ATRIB',
-    FUNCTION_SCHEMA => 'PLYTIX',
-    POLICY_FUNCTION => 'SOLO_USER_ATRIB',
-    STATEMENT_TYPES => 'SELECT, UPDATE, DELETE'
-  );
-END;
+
 /
 // Hacer trigger para el insert, con VPD no se puede
 
@@ -106,7 +108,7 @@ BEGIN
     WHERE CUENTA_ID = :NEW.CUENTA_ID;
 
     -- Si no existe, lanzamos una excepción
-    IF v_count = 0 THEN
+    IF v_count = 0 AND UPPER(USER) NOT LIKE 'PLYTIX%' THEN
         RAISE_APPLICATION_ERROR(-20001, 'El CUENTA_ID no es válido o no pertenece al usuario.');
     END IF;
 END verificar_cuenta_id;
