@@ -196,7 +196,6 @@ PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_
  * vez se apoya en el procedimiento que se
  * de define en el ejercicio 8 de la primera
  * relacion de PL/SQL, P_ACTUALIZAR_PRODUCTOS
- */
 PROCEDURE P_ACTUALIZAR_TODAS_CUENTAS AS
     CURSOR c_cuentas IS SELECT id FROM cuenta;
     BEGIN
@@ -209,6 +208,7 @@ PROCEDURE P_ACTUALIZAR_TODAS_CUENTAS AS
             END;
         END LOOP;
     END P_ACTUALIZAR_TODAS_CUENTAS;
+*/
     
 FUNCTION  F_VALIDAR_ATRIBUTOS_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE,
 p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) RETURN BOOLEAN AS
@@ -359,7 +359,6 @@ p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) AS
         END;
 END P_ELIMINAR_PRODUCTO_Y_ASOCIACIONES;
 
-END PKG_ADMIN_PRODUCTOS;
 -------------------------------------------------------------------------------------------------------------
 -- Ejercicio 8
 -------------------------------------------------------------------------------------------------------------
