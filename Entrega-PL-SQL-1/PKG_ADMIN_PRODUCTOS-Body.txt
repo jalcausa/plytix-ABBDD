@@ -263,4 +263,110 @@ p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) RETURN BOOLEAN AS
         END;
   END F_VALIDAR_ATRIBUTOS_PRODUCTO;
 
+    -------------------------------------------------------------------------------------------------------------
+    -- Ejercicio 8
+    -------------------------------------------------------------------------------------------------------------
+    PROCEDURE p_actualizar_productos(p_cuenta_id IN cuenta.id%TYPE) IS
+        -- Variables auxiliares
+        v_nombre_actual producto.nombre%TYPE;
+        v_exists INTEGER;
+    BEGIN
+        -- Pasamos por cada producto de la tabla PRODUCTO_EXT
+        FOR r IN (SELECT sku, nombre, textocorto, creado FROM s_producto WHERE cuenta_id = p_cuenta_id) LOOP
+            -- Comprobamos si existe el producto en la tabla PRODUCTO
+            SELECT COUNT(*) INTO v_exists
+            FROM producto
+            WHERE r.sku = sku;
+    
+            -- Comprobamos si está dicho producto o no
+            IF v_exists = 0 THEN
+                -- En este caso no existe dicho producto, tenemos que añadirlo
+                -- Gracias al TRIGGER TR_PRODUCTOS podemos insertar un nuevo producto sin especificar un gtin
+                INSERT INTO producto (gtin, sku, nombre, textocorto, miniatura, creado, modificado, cuenta_id)
+                VALUES (NULL, r.sku, r.nombre, r.textocorto, NULL, r.creado, SYSDATE, p_cuenta_id);
+            ELSE
+                -- En este caso existe dicho producto
+                -- Debemos comprobar si coinciden los nombres de PRODUCTOS_EXT y PRODUCTOS
+                FOR s IN (SELECT gtin, nombre FROM producto WHERE (cuenta_id = p_cuenta_id AND sku = r.sku)) LOOP
+                    -- En caso de no coincidir, se debe actualizar al nombre de la tabla externa
+                    IF (r.nombre != s.nombre) THEN
+                        P_ACTUALIZAR_NOMBRE_PRODUCTO(s.gtin, p_cuenta_id, r.nombre);
+                    END IF;
+                END LOOP;
+            END IF;
+        END LOOP;
+    
+        -- Ahora queremos borrar todos los elementos de PRODUCTOS que no estén en PRODUCTOS_EXT
+        FOR r IN (SELECT gtin, sku FROM producto WHERE cuenta_id = p_cuenta_id) LOOP
+            -- Comprobamos si existe el producto en la tabla PRODUCTO_EXT
+            SELECT COUNT(*) INTO v_exists
+            FROM s_producto
+            WHERE (sku = r.sku AND p_cuenta_id = cuenta_id);
+    
+            -- En caso de no existir en la tabla PRODUCTO_EXT, se elimina
+            IF v_exists = 0 THEN
+                P_ELIMINAR_PRODUCTO_Y_ASOCIACIONES(r.gtin, p_cuenta_id);
+            END IF;
+        END LOOP;
+    EXCEPTION
+        WHEN OTHERS THEN
+            DECLARE
+                v_mensaje VARCHAR2(500);
+            BEGIN
+                v_mensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
+                INSERT INTO traza VALUES(SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
+                RAISE;
+            END;
+    END p_actualizar_productos;
+
+    -------------------------------------------------------------------------------------------------------------
+    -- Ejercicio 9
+    -------------------------------------------------------------------------------------------------------------
+    PROCEDURE p_crear_usuario(p_usuario IN USUARIO%ROWTYPE, p_rol IN VARCHAR2, p_password IN VARCHAR2) IS
+        v_rol_valido BOOLEAN;
+        v_copias_usuario NUMBER;
+    BEGIN
+        v_rol_valido := (p_rol IN ('R_USER_STD', 'R_GESTOR_CUENTA', 'R_PLANIFICADOR_SERVICIOS'));
+    
+        IF v_rol_valido THEN
+            BEGIN
+                SELECT COUNT(*) INTO v_copias_usuario
+                FROM usuario
+                WHERE id = p_usuario.id;
+                
+                IF (v_copias_usuario > 0) THEN
+                    RAISE EXCEPTION_USUARIO_YA_EXISTENTE;
+                ELSE
+                    BEGIN
+                        -- Creamos el usuario
+                        EXECUTE IMMEDIATE 'CREATE USER ' || p_usuario.id || ' IDENTIFIED BY "' || p_password || '"';
+                        EXECUTE IMMEDIATE 'GRANT ' || p_rol || ' TO ' || p_usuario.id;
+        
+                        -- Insertamos los datos en la tabla USUARIO
+                        INSERT INTO USUARIO VALUES p_usuario;
+                    END;
+                END IF;
+            EXCEPTION
+                WHEN EXCEPTION_USUARIO_YA_EXISTENTE THEN
+                    INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Usuario ya existe: ' || p_usuario.id);
+                    RAISE;
+            END;
+        ELSE
+            RAISE EXCEPTION_ROL_INEXISTENTE;
+        END IF;
+    EXCEPTION
+        WHEN EXCEPTION_ROL_INEXISTENTE THEN
+            INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Rol inexistente: ' || p_rol);
+            RAISE;
+        
+        WHEN OTHERS THEN
+            DECLARE
+                v_mensaje VARCHAR2(500);
+            BEGIN
+                v_mensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
+                INSERT INTO traza VALUES(SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
+                RAISE;
+            END;
+    END p_crear_usuario;
+
 END PKG_ADMIN_PRODUCTOS;
