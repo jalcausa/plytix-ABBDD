@@ -29,7 +29,6 @@ create or replace PACKAGE PKG_ADMIN_PRODUCTOS AS
     p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE
   ) RETURN BOOLEAN;
 
-  -- Procedimientos de ambas ramas
   PROCEDURE P_ASOCIAR_ACTIVO_A_PRODUCTO(
     p_producto_gtin IN PRODUCTO.GTIN%TYPE,
     p_producto_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE, 
