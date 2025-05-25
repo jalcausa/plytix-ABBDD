@@ -100,3 +100,105 @@
 ---
 
 **Nota total del grupo: 0,00**
+
+# Explicación parte 2 de nivel físico
+
+## **Estructura General de Seguridad**
+
+El script implementa un sistema de seguridad basado en **roles** y **políticas de acceso a nivel de fila (RLS - Row Level Security)** para un sistema llamado Plytix. Se definen 4 tipos de usuarios con diferentes niveles de acceso:
+
+### **1. Roles Creados**
+
+```sql
+CREATE ROLE R_USER_STD;              -- Usuario Estándar
+CREATE ROLE R_GESTOR_CUENTA;         -- Gestor de Cuentas  
+CREATE ROLE R_PLANIFICADOR_SERVICIOS; -- Planificador de Servicios
+```
+
+El **Administrador del Sistema** es el usuario PLYTIX (propietario de las tablas), no necesita rol específico.
+
+## **2. Usuario Estándar (R_USER_STD)**
+
+### **Acceso a su propia información de usuario:**
+- **Vista V_USUARIO**: Solo puede ver y modificar su propio registro
+```sql
+CREATE OR REPLACE VIEW V_USUARIO AS 
+SELECT * FROM USUARIO WHERE UPPER(USUARIO.NOMBREUSUARIO)=USER
+```
+- La condición `WHERE UPPER(USUARIO.NOMBREUSUARIO)=USER` garantiza que solo vea su propio registro
+- Permisos limitados: `SELECT, UPDATE(NOMBRECOMPLETO, AVATAR, EMAIL, TELEFONO)`
+
+### **Acceso a Productos:**
+- **Vista V_PRODUCTO_STD**: Solo productos de su cuenta
+```sql
+WHERE PRODUCTO.CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)
+```
+- **Triggers INSTEAD OF** para operaciones CRUD que:
+  - En INSERT: Asignan automáticamente la CUENTA_ID del usuario actual
+  - En UPDATE/DELETE: Solo permiten modificar productos de su cuenta
+
+### **Acceso a Activos:**
+- **Vista V_ACTIVO_STD**: Solo activos de su cuenta
+- **Triggers similares** que verifican pertenencia a la cuenta del usuario
+- **Vista adicional V_ACTIVO_CATEGORIA_STD** para gestionar relaciones activo-categoría
+
+### **Política de Seguridad VPD para Atributos:**
+```sql
+CREATE OR REPLACE FUNCTION SOLO_USER_ATRIB(...) RETURN VARCHAR2 AS
+BEGIN
+    RETURN 'CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)';
+END;
+```
+- **Virtual Private Database (VPD)** aplica automáticamente esta condición a SELECT, UPDATE, DELETE
+- Para INSERT usa un **trigger adicional** ya que VPD no cubre esta operación
+
+## **3. Gestor de Cuentas (R_GESTOR_CUENTA)**
+
+### **Acceso completo a tabla CUENTA:**
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON CUENTA TO R_GESTOR_CUENTA;
+```
+
+### **Acceso limitado a información de usuarios:**
+- **Vista V_USUARIO_GESTOR**: Excluye datos sensibles (Email, Teléfono)
+```sql
+SELECT ID, NOMBREUSUARIO, NOMBRECOMPLETO, AVATAR, CUENTA_ID FROM USUARIO;
+```
+- **Trigger de protección** impide eliminar usuarios que son propietarios de cuentas
+
+## **4. Planificador de Servicios (R_PLANIFICADOR_SERVICIOS)**
+
+### **Acceso completo a tabla PLAN:**
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON PLAN TO R_PLANIFICADOR_SERVICIOS;
+```
+
+## **5. Características Especiales de Seguridad**
+
+### **Productos Públicos/Privados:**
+- **Campo PUBLICO** añadido a tabla PRODUCTO (por defecto 'S')
+- **Vista V_PRODUCTO_PUBLICO** para productos públicos accesible a todos
+```sql
+CREATE OR REPLACE VIEW V_PRODUCTO_PUBLICO AS
+SELECT * FROM PRODUCTO WHERE PUBLICO = 'S';
+GRANT SELECT ON V_PRODUCTO_PUBLICO TO PUBLIC;
+```
+
+### **Triggers de Validación:**
+- **Verifican pertenencia a la misma cuenta** antes de crear relaciones
+- **Previenen operaciones no autorizadas** como relacionar productos de diferentes cuentas
+- **Asignación automática de CUENTA_ID** basada en el usuario conectado
+
+### **Sinónimos Públicos:**
+```sql
+CREATE PUBLIC SYNONYM MI_USUARIO FOR V_USUARIO;
+CREATE PUBLIC SYNONYM MIS_PRODUCTOS FOR V_PRODUCTO_STD;
+```
+- Facilitan el acceso a las vistas sin especificar el esquema
+
+## **6. Principios de Seguridad Implementados**
+
+1. **Principio de menor privilegio**: Cada rol solo tiene acceso a lo estrictamente necesario
+2. **Segregación de datos por cuenta**: Los usuarios solo ven datos de su propia cuenta
+3. **Protección de datos sensibles**: El gestor de cuentas no puede ver emails/teléfonos
+4. **Integridad referencial**: Los triggers verifican que las relaciones sean válidas
