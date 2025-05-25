@@ -1,0 +1,66 @@
+CREATE OR REPLACE PACKAGE BODY PKG_ADMIN_PRODUCTOS_AVANZADO AS
+
+    FUNCTION F_LISTA_CATEGORIAS_PRODUCTO(
+        p_producto_gtin IN PRODUCTO.GTIN%TYPE, 
+        p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE
+    ) RETURN VARCHAR2 AS
+        v_dummy NUMBER;
+        v_categorias VARCHAR2(4000);
+        v_categoria categoria.nombre%TYPE;
+        v_mensaje VARCHAR2(500);
+
+        CURSOR c_categorias IS 
+            SELECT c.nombre 
+            FROM categoria c 
+            JOIN producto_categoria pc 
+              ON c.id = pc.categoria_id 
+             AND c.cuenta_id = pc.categoria_cuenta_id
+            WHERE pc.producto_gtin = p_producto_gtin 
+              AND pc.producto_cuenta_id = p_cuenta_id;
+
+    BEGIN
+        -- Verificar que el usuario tiene acceso a la cuenta
+        IF PKG_ADMIN_PRODUCTOS.F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
+            RAISE PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA;
+        END IF;
+
+        -- Verificar que el producto existe
+        SELECT 1 INTO v_dummy
+        FROM producto
+        WHERE gtin = p_producto_gtin AND cuenta_id = p_cuenta_id;
+
+        OPEN c_categorias;
+        FETCH c_categorias INTO v_categoria;
+
+        IF c_categorias%FOUND THEN
+            v_categorias := v_categoria;
+        ELSE
+            v_categorias := 'Sin categoría';
+        END IF;
+
+        LOOP
+            FETCH c_categorias INTO v_categoria;
+            EXIT WHEN c_categorias%NOTFOUND;
+            v_categorias := v_categorias || ' ; ' || v_categoria;
+        END LOOP;
+
+        CLOSE c_categorias;
+
+        RETURN v_categorias;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            INSERT INTO traza
+            VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Producto con gtin: ' || p_producto_gtin || ' y cuenta con id asociada: ' || p_cuenta_id || ' no encontrado');
+            RAISE;
+
+        WHEN OTHERS THEN
+            BEGIN
+                v_mensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
+                INSERT INTO traza
+                VALUES (SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
+                RAISE;
+            END;
+    END F_LISTA_CATEGORIAS_PRODUCTO;
+
+END PKG_ADMIN_PRODUCTOS_AVANZADO;
