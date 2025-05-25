@@ -1,5 +1,8 @@
 create or replace PACKAGE BODY PKG_ADMIN_PRODUCTOS AS
 
+-------------------------------------------------------------------------------------------------------------
+-- Funcion auxiliar
+-------------------------------------------------------------------------------------------------------------
 FUNCTION F_USUARIO_ACCESO_CUENTA (p_nombreusuario IN USUARIO.NOMBREUSUARIO%TYPE,
   p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
     v_count NUMBER;
@@ -12,7 +15,9 @@ FUNCTION F_USUARIO_ACCESO_CUENTA (p_nombreusuario IN USUARIO.NOMBREUSUARIO%TYPE,
     RETURN CASE WHEN v_count > 0 OR UPPER(p_nombreusuario) LIKE 'PLYTIX%' THEN 1 ELSE 0 END;
   END F_USUARIO_ACCESO_CUENTA;
 
-
+-------------------------------------------------------------------------------------------------------------
+-- Ejercicio 1
+-------------------------------------------------------------------------------------------------------------
 FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYPE AS
     v_cuenta CUENTA%ROWTYPE;
     v_plan_id CUENTA.PLAN_ID%TYPE;
@@ -54,6 +59,9 @@ FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYP
         END;
   END F_OBTENER_PLAN_CUENTA;
 
+-------------------------------------------------------------------------------------------------------------
+-- Ejercicio 2
+-------------------------------------------------------------------------------------------------------------
 FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
     v_count NUMBER;
     v_cuenta CUENTA%ROWTYPE;
@@ -85,7 +93,65 @@ FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER 
         END;
   END F_CONTAR_PRODUCTOS_CUENTA;
 
+-------------------------------------------------------------------------------------------------------------
+-- Ejercicio 3
+-------------------------------------------------------------------------------------------------------------
+FUNCTION  F_VALIDAR_ATRIBUTOS_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE,
+p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) RETURN BOOLEAN AS
+    v_cuenta CUENTA%ROWTYPE;
+    v_total_atributos NUMBER;
+    v_total_valores NUMBER;
+    v_existe_producto NUMBER;
+    BEGIN
+        -- Comprobar que existe la cuenta que nos pasan como parámetro:
+        -- Laza NO_DATA_FOUND por defecto si no existe
+        SELECT * INTO v_cuenta FROM CUENTA WHERE ID = p_cuenta_id;
+    
+        -- Comprobar que el usuario tiene acceso a la cuenta
+        -- Si no tiene acceso lanzar la excepción personalizada EXCEPTION_SIN_ACCESO_CUENTA;
+        IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
+          RAISE EXCEPTION_SIN_ACCESO_CUENTA;
+        END IF;
+        
+        -- Verificar que el producto existe
+        SELECT COUNT(*) INTO v_existe_producto
+        FROM PRODUCTO
+        WHERE GTIN = p_producto_gtin
+        AND CUENTA_ID = p_cuenta_id;
+        
+        IF v_existe_producto = 0 THEN
+            RAISE NO_DATA_FOUND;
+        END IF;
+        
+        -- Contar el número total de atributos definidos para esta cuenta
+        SELECT COUNT(*) INTO v_total_atributos
+        FROM ATRIBUTO
+        WHERE CUENTA_ID = p_cuenta_id;
+        
+        -- Contar el número de atributos que tienen valores para este producto
+        SELECT COUNT(DISTINCT ap.ATRIBUTO_ID) INTO v_total_valores
+        FROM ATRIBUTO_PRODUCTO ap
+        WHERE ap.PRODUCTO_GTIN = p_producto_gtin
+        AND ap.PRODUCTO_CUENTA_ID = p_cuenta_id
+        AND ap.ATRIBUTO_CUENTA_ID = p_cuenta_id;
+    
+        -- Verificar si todos los atributos tienen valores asociados
+        RETURN (v_total_valores = v_total_atributos);
+    EXCEPTION
+    WHEN OTHERS THEN
+        DECLARE
+            Vmensaje varchar2(500);
+        BEGIN
+            Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
+            DBMS_OUTPUT.PUT_LINE(Vmensaje);
+            insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+            RAISE;
+        END;
+  END F_VALIDAR_ATRIBUTOS_PRODUCTO;
+
+-------------------------------------------------------------------------------------------------------------
 -- Ejercicio 4
+-------------------------------------------------------------------------------------------------------------
 FUNCTION F_NUM_CATEGORIAS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
     CURSOR c_categorias IS
         SELECT 1
@@ -134,7 +200,9 @@ FUNCTION F_NUM_CATEGORIAS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
             END;
   END F_NUM_CATEGORIAS_CUENTA;
 
+-------------------------------------------------------------------------------------------------------------
 -- Ejercicio 5
+-------------------------------------------------------------------------------------------------------------
 PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE, p_nuevo_nombre IN PRODUCTO.NOMBRE%TYPE) AS
     v_dummy NUMBER;
     BEGIN
@@ -190,80 +258,33 @@ PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_
             END;
   END P_ACTUALIZAR_NOMBRE_PRODUCTO;
 
+-------------------------------------------------------------------------------------------------------------
+-- Procedimiento auxiliar
 /*
- * Procedimiento auxiliar utilizado por 
- * el job J_ACTUALIZA_PRODUCTOS, que a su
- * vez se apoya en el procedimiento que se
- * de define en el ejercicio 8 de la primera
- * relacion de PL/SQL, P_ACTUALIZAR_PRODUCTOS
+ * Procedimiento auxiliar utilizado por el job J_ACTUALIZA_PRODUCTOS, que a su
+ * vez se apoya en el procedimiento que se de define en el ejercicio 8 de la
+ * primera relacion de PL/SQL, P_ACTUALIZAR_PRODUCTOS
+ */
+-------------------------------------------------------------------------------------------------------------
 PROCEDURE P_ACTUALIZAR_TODAS_CUENTAS AS
     CURSOR c_cuentas IS SELECT id FROM cuenta;
-    BEGIN
-        FOR r IN c_cuentas LOOP
-            BEGIN
-                P_ACTUALIZAR_PRODUCTOS(r.id);
-            EXCEPTION
-                WHEN OTHERS THEN
-                    INSERT INTO traza VALUES (SYSDATE, USER, 'P_ACTUALIZAR_TODAS_CUENTAS', 'Error en cuenta ' || r.id || ': ' || SQLERRM);
-            END;
-        END LOOP;
-    END P_ACTUALIZAR_TODAS_CUENTAS;
-*/
-    
-FUNCTION  F_VALIDAR_ATRIBUTOS_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE,
-p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) RETURN BOOLEAN AS
-    v_cuenta CUENTA%ROWTYPE;
-    v_total_atributos NUMBER;
-    v_total_valores NUMBER;
-    v_existe_producto NUMBER;
-    BEGIN
-        -- Comprobar que existe la cuenta que nos pasan como parámetro:
-        -- Laza NO_DATA_FOUND por defecto si no existe
-        SELECT * INTO v_cuenta FROM CUENTA WHERE ID = p_cuenta_id;
-    
-        -- Comprobar que el usuario tiene acceso a la cuenta
-        -- Si no tiene acceso lanzar la excepción personalizada EXCEPTION_SIN_ACCESO_CUENTA;
-        IF F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
-          RAISE EXCEPTION_SIN_ACCESO_CUENTA;
-        END IF;
-        
-        -- Verificar que el producto existe
-        SELECT COUNT(*) INTO v_existe_producto
-        FROM PRODUCTO
-        WHERE GTIN = p_producto_gtin
-        AND CUENTA_ID = p_cuenta_id;
-        
-        IF v_existe_producto = 0 THEN
-            RAISE NO_DATA_FOUND;
-        END IF;
-        
-        -- Contar el número total de atributos definidos para esta cuenta
-        SELECT COUNT(*) INTO v_total_atributos
-        FROM ATRIBUTO
-        WHERE CUENTA_ID = p_cuenta_id;
-        
-        -- Contar el número de atributos que tienen valores para este producto
-        SELECT COUNT(DISTINCT ap.ATRIBUTO_ID) INTO v_total_valores
-        FROM ATRIBUTO_PRODUCTO ap
-        WHERE ap.PRODUCTO_GTIN = p_producto_gtin
-        AND ap.PRODUCTO_CUENTA_ID = p_cuenta_id
-        AND ap.ATRIBUTO_CUENTA_ID = p_cuenta_id;
-    
-        -- Verificar si todos los atributos tienen valores asociados
-        RETURN (v_total_valores = v_total_atributos);
-    EXCEPTION
-    WHEN OTHERS THEN
-        DECLARE
-            Vmensaje varchar2(500);
+    v_mensaje traza.descripcion%TYPE;
+BEGIN
+    FOR r IN c_cuentas LOOP
         BEGIN
-            Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
-            DBMS_OUTPUT.PUT_LINE(Vmensaje);
-            insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
-            RAISE;
+            P_ACTUALIZAR_PRODUCTOS(r.id);
+        EXCEPTION
+            WHEN OTHERS THEN
+                v_mensaje := 'Error en cuenta ' || TO_CHAR(r.id) || ': ' || SQLERRM;
+                INSERT INTO traza (fecha, usuario, causante, descripcion)
+                VALUES (SYSDATE, USER, 'P_ACTUALIZAR_TODAS_CUENTAS', v_mensaje);
         END;
-  END F_VALIDAR_ATRIBUTOS_PRODUCTO;
+    END LOOP;
+END P_ACTUALIZAR_TODAS_CUENTAS;
 
+-------------------------------------------------------------------------------------------------------------
 -- Ejercicio 6
+-------------------------------------------------------------------------------------------------------------
 PROCEDURE P_ASOCIAR_ACTIVO_A_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE,
 p_producto_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE, p_activo_id IN ACTIVO.ID%TYPE,
 p_activo_cuenta_id IN ACTIVO.CUENTA_ID%TYPE) AS 
@@ -319,7 +340,9 @@ p_activo_cuenta_id IN ACTIVO.CUENTA_ID%TYPE) AS
         END;
 END P_ASOCIAR_ACTIVO_A_PRODUCTO;
 
+-------------------------------------------------------------------------------------------------------------
 -- Ejercicio 7
+-------------------------------------------------------------------------------------------------------------
 PROCEDURE P_ELIMINAR_PRODUCTO_Y_ASOCIACIONES(p_producto_gtin IN PRODUCTO.GTIN%TYPE,
 p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) AS 
     v_existe NUMBER;
