@@ -196,19 +196,23 @@ PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_
  * vez se apoya en el procedimiento que se
  * de define en el ejercicio 8 de la primera
  * relacion de PL/SQL, P_ACTUALIZAR_PRODUCTOS
+ */
+ 
 PROCEDURE P_ACTUALIZAR_TODAS_CUENTAS AS
     CURSOR c_cuentas IS SELECT id FROM cuenta;
-    BEGIN
-        FOR r IN c_cuentas LOOP
-            BEGIN
-                P_ACTUALIZAR_PRODUCTOS(r.id);
-            EXCEPTION
-                WHEN OTHERS THEN
-                    INSERT INTO traza VALUES (SYSDATE, USER, 'P_ACTUALIZAR_TODAS_CUENTAS', 'Error en cuenta ' || r.id || ': ' || SQLERRM);
-            END;
-        END LOOP;
-    END P_ACTUALIZAR_TODAS_CUENTAS;
-*/
+    v_mensaje traza.descripcion%TYPE;
+BEGIN
+    FOR r IN c_cuentas LOOP
+        BEGIN
+            P_ACTUALIZAR_PRODUCTOS(r.id);
+        EXCEPTION
+            WHEN OTHERS THEN
+                v_mensaje := 'Error en cuenta ' || TO_CHAR(r.id) || ': ' || SQLERRM;
+                INSERT INTO traza (fecha, usuario, causante, descripcion)
+                VALUES (SYSDATE, USER, 'P_ACTUALIZAR_TODAS_CUENTAS', v_mensaje);
+        END;
+    END LOOP;
+END P_ACTUALIZAR_TODAS_CUENTAS;
     
 FUNCTION  F_VALIDAR_ATRIBUTOS_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE,
 p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) RETURN BOOLEAN AS
