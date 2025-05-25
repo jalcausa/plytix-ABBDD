@@ -73,82 +73,145 @@ FUNCTION  F_VALIDAR_PLAN_SUFICIENTE(p_cuenta_id IN CUENTA.ID%TYPE) RETURN VARCHA
         END;
   END F_VALIDAR_PLAN_SUFICIENTE;
 
-    -------------------------------------------------------------------------------------------------------------
-    -- Ejercicio 3
-    -------------------------------------------------------------------------------------------------------------
-    PROCEDURE P_MIGRAR_PRODUCTOS_A_CATEGORIA(
-        p_cuenta_id IN CUENTA.ID%TYPE,
-        p_categoria_origen_id IN CATEGORIA.ID%TYPE,
-        p_categoria_destino_id IN CATEGORIA.ID%TYPE
-    ) AS
-        -- Cursor que selecciona los productos en la categoría de origen que serán migrados
-        -- Bloquea las filas seleccionadas en PRODUCTO_CATEGORIA para evitar modificaciones concurrentes.
-        CURSOR c_productos_a_migrar IS
-            SELECT 1 -- Se usa un dato mínimo
-            FROM producto_categoria pc
-            WHERE pc.categoria_id = p_categoria_origen_id       -- Nos aseguramos de que partimos de categoria_origen
-              AND pc.categoria_cuenta_id = p_cuenta_id          -- Nos aseguramos de que la categoría pertenece a la cuenta dada
-              AND pc.producto_cuenta_id = p_cuenta_id           -- Nos aseguramos de que el producto también pertenece a esa cuenta
-            FOR UPDATE OF pc.categoria_id;                      -- Bloqueamos la modificación de las filas
-    BEGIN
-        -- Verificamos que la cuenta existe
-        IF NOT EXISTS (SELECT 1 FROM cuenta WHERE id = p_cuenta_id) THEN
-            RAISE NO_DATA_FOUND;
-        END IF;
+-- Procedimiento 2
+PROCEDURE P_REPLICAR_ATRIBUTOS(p_cuenta_id IN CUENTA.ID%TYPE, 
+p_producto_gtin_origen IN PRODUCTO.GTIN%TYPE, p_producto_gtin_destino IN PRODUCTO.GTIN%TYPE)
+AS
+    CURSOR c_atributos_origen IS
+        SELECT ATRIBUTO_ID, ATRIBUTO_CUENTA_ID, VALOR
+        FROM ATRIBUTO_PRODUCTO
+        WHERE PRODUCTO_GTIN = p_producto_gtin_origen
+            AND PRODUCTO_CUENTA_ID = p_cuenta_id;
+    
+    v_existe NUMBER;
+BEGIN
+    -- Comprobar que el producto origen existe (lanza por defecto NO_DATA_FOUND)
+    SELECT 1 INTO v_existe
+    FROM PRODUCTO
+    WHERE GTIN = p_producto_gtin_origen AND CUENTA_ID = p_cuenta_id;
 
-        -- Verificamos que categoria_origen existe y que está asociada a nuestra cuenta
-        IF NOT EXISTS (SELECT 1 FROM categoria WHERE (id = p_categoria_origen_id AND cuenta_id = p_cuenta_id)) THEN
-            RAISE NO_DATA_FOUND;
-        END IF;
+    -- Comprobar que el producto destino existe (lanza por defecto NO_DATA_FOUND)
+    SELECT 1 INTO v_existe
+    FROM PRODUCTO
+    WHERE GTIN = p_producto_gtin_destino AND CUENTA_ID = p_cuenta_id;
 
-        -- Verificamos que categoria_destino existe y que está asociada a nuestra cuenta
-        IF NOT EXISTS (SELECT 1 FROM categoria WHERE (id = p_categoria_destino_id AND cuenta_id = p_cuenta_id)) THEN
-            RAISE NO_DATA_FOUND;
-        END IF;
+    -- Iterar sobre los atributos del producto origen
+    FOR r IN c_atributos_origen LOOP
+        BEGIN
+            -- Comprobar si existe el atributo en el producto destino
+            SELECT 1 INTO v_existe
+            FROM ATRIBUTO_PRODUCTO
+            WHERE PRODUCTO_GTIN = p_producto_gtin_destino
+                AND PRODUCTO_CUENTA_ID = p_cuenta_id
+                AND ATRIBUTO_ID = r.ATRIBUTO_ID
+                AND ATRIBUTO_CUENTA_ID = r.ATRIBUTO_CUENTA_ID;
+            
+            -- Si existe, se actualiza el valor
+            UPDATE ATRIBUTO_PRODUCTO
+            SET VALOR = r.VALOR
+            WHERE PRODUCTO_GTIN = p_producto_gtin_destino
+                AND PRODUCTO_CUENTA_ID = p_cuenta_id
+                AND ATRIBUTO_ID = r.ATRIBUTO_ID
+                AND ATRIBUTO_CUENTA_ID = r.ATRIBUTO_CUENTA_ID;
+        
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                -- Si no existe, se inserta
+                INSERT INTO ATRIBUTO_PRODUCTO(VALOR, PRODUCTO_GTIN, ATRIBUTO_ID, 
+                PRODUCTO_CUENTA_ID, ATRIBUTO_CUENTA_ID) VALUES (r.valor, 
+                p_producto_gtin_destino, r.ATRIBUTO_ID, p_cuenta_id, r.ATRIBUTO_CUENTA_ID);
+        END;
+    END LOOP;
 
-        -- Comprobamos si categoria_origen == categoria_destino, en cuyo caso no habrá que hacer nada
-        IF (p_categoria_origen_id = p_categoria_destino_id) THEN
-            RETURN;
-        END IF;
-
-        -- Actualizamos la categoría de los productos
-        FOR prod_rec IN c_productos_a_migrar LOOP
-            BEGIN
-                UPDATE producto_categoria
-                SET categoria_id = p_categoria_destino_id
-                WHERE CURRENT OF c_productos_a_migrar;
-            EXCEPTION
-                WHEN DUP_VAL_ON_INDEX THEN -- En caso de que ya se encuentre dicho producto en la categoría destino, no podríamos modificar categoria_id a una ya existente
-                    ROLLBACK;
-                    DECLARE
-                        v_mensaje VARCHAR2(500);
-                    BEGIN
-                        v_mensaje := 'Producto con GTIN ' || prod_rec.producto_gtin || ' ya estaba en la categoría destino. CuentaID: ' || p_cuenta_id;
-                        INSERT INTO traza (fecha, usuario, operacion, mensaje) VALUES (SYSDATE, USER, 'P_MIGRAR_PRODUCTOS_A_CATEGORIA', v_mensaje);
-                    END;
-            END;
-        END LOOP;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            ROLLBACK;
-            DECLARE
-                v_mensaje VARCHAR2(500);
-            BEGIN
-                v_mensaje := 'P_MIGRAR_PRODUCTOS_A_CATEGORIA: NO_DATA_FOUND - Entidad no encontrada. CuentaID: ' || p_cuenta_id || ', OrigenID: ' || p_categoria_origen_id || ', DestinoID: ' || p_categoria_destino_id;
-                INSERT INTO traza (fecha, usuario, operacion, mensaje) VALUES (SYSDATE, USER, 'P_MIGRAR_PRODUCTOS_A_CATEGORIA', v_mensaje);
-            END;
+EXCEPTION
+    WHEN OTHERS THEN
+        DECLARE
+            Vmensaje VARCHAR2(500);
+        BEGIN
+            Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
+            DBMS_OUTPUT.PUT_LINE(Vmensaje);
+            INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
             RAISE;
+        END;
+END P_REPLICAR_ATRIBUTOS;
 
-        WHEN OTHERS THEN
-            ROLLBACK;
-            DECLARE
-                v_mensaje VARCHAR2(500);
-            BEGIN
-                v_mensaje := SUBSTR(SQLCODE || ' ' || SQL_ERRM, 1, 500);
-                INSERT INTO traza (fecha, usuario, operacion, mensaje) VALUES (SYSDATE, USER, 'P_MIGRAR_PRODUCTOS_A_CATEGORIA', v_mensaje);
-            END;
-            RAISE;
-    END P_MIGRAR_PRODUCTOS_A_CATEGORIA;
+-------------------------------------------------------------------------------------------------------------
+-- Ejercicio 3 -- NO COMPILA
+-------------------------------------------------------------------------------------------------------------
+/*
+PROCEDURE P_MIGRAR_PRODUCTOS_A_CATEGORIA(
+    p_cuenta_id IN CUENTA.ID%TYPE,
+    p_categoria_origen_id IN CATEGORIA.ID%TYPE,
+    p_categoria_destino_id IN CATEGORIA.ID%TYPE
+) AS
+    -- Cursor que selecciona los productos en la categoría de origen que serán migrados
+    -- Bloquea las filas seleccionadas en PRODUCTO_CATEGORIA para evitar modificaciones concurrentes.
+    CURSOR c_productos_a_migrar IS
+        SELECT 1 -- Se usa un dato mínimo
+        FROM producto_categoria pc
+        WHERE pc.categoria_id = p_categoria_origen_id       -- Nos aseguramos de que partimos de categoria_origen
+          AND pc.categoria_cuenta_id = p_cuenta_id          -- Nos aseguramos de que la categoría pertenece a la cuenta dada
+          AND pc.producto_cuenta_id = p_cuenta_id           -- Nos aseguramos de que el producto también pertenece a esa cuenta
+        FOR UPDATE OF pc.categoria_id;                      -- Bloqueamos la modificación de las filas
+BEGIN
+    -- Verificamos que la cuenta existe
+    IF NOT EXISTS (SELECT 1 FROM cuenta WHERE id = p_cuenta_id) THEN
+        RAISE NO_DATA_FOUND;
+    END IF;
 
+    -- Verificamos que categoria_origen existe y que está asociada a nuestra cuenta
+    IF NOT EXISTS (SELECT 1 FROM categoria WHERE (id = p_categoria_origen_id AND cuenta_id = p_cuenta_id)) THEN
+        RAISE NO_DATA_FOUND;
+    END IF;
+
+    -- Verificamos que categoria_destino existe y que está asociada a nuestra cuenta
+    IF NOT EXISTS (SELECT 1 FROM categoria WHERE (id = p_categoria_destino_id AND cuenta_id = p_cuenta_id)) THEN
+        RAISE NO_DATA_FOUND;
+    END IF;
+
+    -- Comprobamos si categoria_origen == categoria_destino, en cuyo caso no habrá que hacer nada
+    IF (p_categoria_origen_id = p_categoria_destino_id) THEN
+        RETURN;
+    END IF;
+
+    -- Actualizamos la categoría de los productos
+    FOR prod_rec IN c_productos_a_migrar LOOP
+        BEGIN
+            UPDATE producto_categoria
+            SET categoria_id = p_categoria_destino_id
+            WHERE CURRENT OF c_productos_a_migrar;
+        EXCEPTION
+            WHEN DUP_VAL_ON_INDEX THEN -- En caso de que ya se encuentre dicho producto en la categoría destino, no podríamos modificar categoria_id a una ya existente
+                ROLLBACK;
+                DECLARE
+                    v_mensaje VARCHAR2(500);
+                BEGIN
+                    v_mensaje := 'Producto con GTIN ' || prod_rec.producto_gtin || ' ya estaba en la categoría destino. CuentaID: ' || p_cuenta_id;
+                    INSERT INTO traza (fecha, usuario, operacion, mensaje) VALUES (SYSDATE, USER, 'P_MIGRAR_PRODUCTOS_A_CATEGORIA', v_mensaje);
+                END;
+        END;
+    END LOOP;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        ROLLBACK;
+        DECLARE
+            v_mensaje VARCHAR2(500);
+        BEGIN
+            v_mensaje := 'P_MIGRAR_PRODUCTOS_A_CATEGORIA: NO_DATA_FOUND - Entidad no encontrada. CuentaID: ' || p_cuenta_id || ', OrigenID: ' || p_categoria_origen_id || ', DestinoID: ' || p_categoria_destino_id;
+            INSERT INTO traza (fecha, usuario, operacion, mensaje) VALUES (SYSDATE, USER, 'P_MIGRAR_PRODUCTOS_A_CATEGORIA', v_mensaje);
+        END;
+        RAISE;
+
+    WHEN OTHERS THEN
+        ROLLBACK;
+        DECLARE
+            v_mensaje VARCHAR2(500);
+        BEGIN
+            v_mensaje := SUBSTR(SQLCODE || ' ' || SQL_ERRM, 1, 500);
+            INSERT INTO traza (fecha, usuario, operacion, mensaje) VALUES (SYSDATE, USER, 'P_MIGRAR_PRODUCTOS_A_CATEGORIA', v_mensaje);
+        END;
+        RAISE;
+END P_MIGRAR_PRODUCTOS_A_CATEGORIA;
+*/
 
 END PKG_ADMIN_PRODUCTOS_AVANZADO;
