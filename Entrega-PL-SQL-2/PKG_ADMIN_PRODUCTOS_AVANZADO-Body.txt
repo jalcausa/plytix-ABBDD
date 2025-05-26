@@ -277,7 +277,7 @@ BEGIN
                 p_producto_gtin_destino, r.ATRIBUTO_ID, p_cuenta_id, r.ATRIBUTO_CUENTA_ID);
         END;
     END LOOP;
-
+    COMMIT;
 EXCEPTION
     WHEN OTHERS THEN
         DECLARE
@@ -286,6 +286,7 @@ EXCEPTION
             Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
+            ROLLBACK;
             RAISE;
         END;
 END P_REPLICAR_ATRIBUTOS;
