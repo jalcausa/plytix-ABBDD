@@ -5,7 +5,7 @@ DECLARE
     v_producto_gtin PRODUCTO.GTIN%TYPE;
 BEGIN
     -- Limpiamos el estado anterior
-    DELETE FROM traza WHERE operacion = 'P_MIGRAR_PRODUCTOS_A_CATEGORIA';
+    DELETE FROM traza WHERE causante = 'P_MIGRAR_PRODUCTOS_A_CATEGORIA';
 
     -- Creamos una cuenta de prueba
     INSERT INTO cuenta VALUES (9999, 'Cuenta de prueba', 'Calle Prueba', 'NIFPRUEBA', SYSDATE, NULL, 1);
@@ -22,11 +22,11 @@ BEGIN
     INSERT INTO producto VALUES (v_producto_gtin, 'SKU_000999', 'Producto de prueba', NULL, NULL, NULL, NULL, v_cuenta_id);
 
     -- Insertamos el elemento pertinente en producto_categoria
-    INSERT INTO producto_categoria(producto_id, producto_cuenta_id, categoria_id, categoria_cuenta_id)
+    INSERT INTO producto_categoria(producto_gtin, producto_cuenta_id, categoria_id, categoria_cuenta_id)
     VALUES (v_producto_gtin, v_cuenta_id, v_cat_origen_id, v_cuenta_id);
 
     -- Ejecutamos el procedimiento
-    P_MIGRAR_PRODUCTOS_A_CATEGORIA(v_cuenta_id, v_cat_origen_id, v_cat_destino_id);
+    PKG_ADMIN_PRODUCTOS_AVANZADO.P_MIGRAR_PRODUCTOS_A_CATEGORIA(v_cuenta_id, v_cat_origen_id, v_cat_destino_id);
 
     -- Verificamos que el producto ha migrado correctamente
     DECLARE
@@ -34,7 +34,7 @@ BEGIN
     BEGIN
         SELECT COUNT(*) INTO v_count
         FROM producto_categoria
-        WHERE producto_id = v_producto_id AND categoria_id = v_cat_destino_id;
+        WHERE producto_gtin = v_producto_gtin AND categoria_id = v_cat_destino_id;
 
         IF v_count = 1 THEN
             DBMS_OUTPUT.PUT_LINE('Producto migrado correctamente.');
@@ -49,7 +49,7 @@ BEGIN
     BEGIN
         SELECT COUNT(*) INTO v_count
         FROM producto_categoria
-        WHERE producto_id = v_producto_gtin AND categoria_id = v_cat_origen_id;
+        WHERE producto_gtin = v_producto_gtin AND categoria_id = v_cat_origen_id;
 
         IF v_count = 0 THEN
             DBMS_OUTPUT.PUT_LINE('Producto eliminado de categoría origen.');
@@ -63,7 +63,7 @@ BEGIN
         v_count NUMBER;
     BEGIN
         SELECT COUNT(*) INTO v_count FROM traza
-        WHERE operacion = 'P_MIGRAR_PRODUCTOS_A_CATEGORIA';
+        WHERE causante = 'P_MIGRAR_PRODUCTOS_A_CATEGORIA';
 
         IF v_count = 0 THEN
             DBMS_OUTPUT.PUT_LINE('No se generaron errores en traza.');
