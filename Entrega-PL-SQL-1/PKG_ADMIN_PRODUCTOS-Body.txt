@@ -55,6 +55,7 @@ FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYP
             Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+			COMMIT;
             RAISE;
         END;
   END F_OBTENER_PLAN_CUENTA;
@@ -89,6 +90,7 @@ FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER 
             Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+			COMMIT;
             RAISE;
         END;
   END F_CONTAR_PRODUCTOS_CUENTA;
@@ -145,6 +147,7 @@ p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) RETURN BOOLEAN AS
             Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+			COMMIT;
             RAISE;
         END;
   END F_VALIDAR_ATRIBUTOS_PRODUCTO;

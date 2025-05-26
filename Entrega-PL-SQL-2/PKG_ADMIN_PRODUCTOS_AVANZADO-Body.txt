@@ -72,6 +72,7 @@ FUNCTION  F_VALIDAR_PLAN_SUFICIENTE(p_cuenta_id IN CUENTA.ID%TYPE) RETURN VARCHA
             Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+			COMMIT;
             RAISE;
         END;
   END F_VALIDAR_PLAN_SUFICIENTE;
