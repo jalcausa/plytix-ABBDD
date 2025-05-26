@@ -1,6 +1,6 @@
 DECLARE
-  P_CUENTA_ID NUMBER := 1; -- Reemplace con un ID de cuenta válido en su base de datos
-  v_Return PLAN%ROWTYPE; -- Use el tipo correcto que coincide con el retorno de la función
+  P_CUENTA_ID NUMBER := 1; 
+  v_Return PLAN%ROWTYPE;
 BEGIN
   v_Return := PKG_ADMIN_PRODUCTOS.F_OBTENER_PLAN_CUENTA(
     P_CUENTA_ID => P_CUENTA_ID
@@ -8,9 +8,7 @@ BEGIN
   
   -- Mostrar los resultados
   DBMS_OUTPUT.PUT_LINE('Plan ID: ' || v_Return.ID);
-  -- Agregue más campos según la estructura de su tabla PLAN
   DBMS_OUTPUT.PUT_LINE('Nombre del Plan: ' || v_Return.NOMBRE);
-  -- DBMS_OUTPUT.PUT_LINE('Descripción: ' || v_Return.DESCRIPCION);
   
 EXCEPTION
   WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_PLAN_NO_ASIGNADO THEN

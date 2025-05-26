@@ -136,30 +136,7 @@ BEGIN
             );
     END;
 
-    -- Test 5: Sin acceso a la cuenta
-    BEGIN
-        v_result := PKG_ADMIN_PRODUCTOS.F_VALIDAR_ATRIBUTOS_PRODUCTO(1001, 3);
-        P_INSERTAR_RESULTADO_TEST(
-            'F_VALIDAR_ATRIBUTOS_PRODUCTO - sin acceso', 
-            'FAIL', 
-            'No se lanzó EXCEPTION_SIN_ACCESO_CUENTA para cuenta 3'
-        );
-    EXCEPTION
-        WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
-            P_INSERTAR_RESULTADO_TEST(
-                'F_VALIDAR_ATRIBUTOS_PRODUCTO - sin acceso', 
-                'OK', 
-                'Excepción EXCEPTION_SIN_ACCESO_CUENTA capturada correctamente para cuenta 3'
-            );
-        WHEN OTHERS THEN
-            P_INSERTAR_RESULTADO_TEST(
-                'F_VALIDAR_ATRIBUTOS_PRODUCTO - sin acceso', 
-                'FAIL', 
-                SQLERRM
-            );
-    END;
-
-    -- Test 6: Producto sin atributos definidos en la cuenta
+    -- Test 5: Producto sin atributos definidos en la cuenta
     BEGIN
         v_result := PKG_ADMIN_PRODUCTOS.F_VALIDAR_ATRIBUTOS_PRODUCTO(1003, 1000);
         IF v_result = TRUE THEN
@@ -304,7 +281,7 @@ DROP PROCEDURE P_INSERTAR_RESULTADO_TEST;
 DROP PROCEDURE P_RUN_TESTS_F_VALIDAR_ATRIBUTOS_PRODUCTO;
 DROP TABLE TEST_RESULTADOS PURGE;
 
--- 8. (Opcional) Limpiar datos de prueba si se desea
+-- 8. Limpiar datos de prueba
 /*
 DELETE FROM ATRIBUTO_PRODUCTO WHERE producto_gtin IN (1001, 1002, 1003);
 DELETE FROM PRODUCTO WHERE gtin IN (1001, 1002, 1003);

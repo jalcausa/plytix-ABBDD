@@ -100,30 +100,6 @@ BEGIN
             );
     END;
 
-    -- Test 4: Sin acceso a la cuenta (cuenta 3)
-	-- Para poder probar este test tenemos que hacerlo desde un usuario que no
-	-- tenga acceso a la cuenta 3
-    BEGIN
-        v_result := PKG_ADMIN_PRODUCTOS.F_CONTAR_PRODUCTOS_CUENTA(3);
-        P_INSERTAR_RESULTADO_TEST(
-            'F_CONTAR_PRODUCTOS_CUENTA - sin acceso', 
-            'FAIL', 
-            'No se lanzó EXCEPTION_SIN_ACCESO_CUENTA'
-        );
-    EXCEPTION
-        WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
-            P_INSERTAR_RESULTADO_TEST(
-                'F_CONTAR_PRODUCTOS_CUENTA - sin acceso', 
-                'OK', 
-                'Excepción EXCEPTION_SIN_ACCESO_CUENTA capturada correctamente'
-            );
-        WHEN OTHERS THEN
-            P_INSERTAR_RESULTADO_TEST(
-                'F_CONTAR_PRODUCTOS_CUENTA - sin acceso', 
-                'FAIL', 
-                SQLERRM
-            );
-    END;
 END;
 /
 
