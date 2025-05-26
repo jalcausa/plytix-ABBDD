@@ -4,3 +4,20 @@ ALTER TABLE usuario MODIFY (telefono ENCRYPT);
 
 -- Para ver las columnas encriptadas: como SYSTEM:
 SELECT * FROM DBA_ENCRYPTED_COLUMNS;
+
+-- AUDITORIA
+-- Como system:
+GRANT AUDIT_ADMIN TO PLYTIX;
+
+-- Como plytix:
+CREATE AUDIT POLICY plan_audit_pol
+ACTIONS ALL ON plan;
+
+-- Para activar la política una vez creada:
+AUDIT POLICY plan_audit_pol;
+
+-- Ver todos los registros de auditoría
+SELECT event_timestamp, dbusername, action_name, object_name, sql_text
+FROM UNIFIED_AUDIT_TRAIL
+WHERE object_name = 'PLAN'
+ORDER BY event_timestamp DESC;
