@@ -294,7 +294,7 @@ EXCEPTION
             Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
-            ROLLBACK;
+            COMMIT;
             RAISE;
         END;
 END P_REPLICAR_ATRIBUTOS;

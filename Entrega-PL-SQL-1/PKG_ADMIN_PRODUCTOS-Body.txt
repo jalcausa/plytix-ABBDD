@@ -343,7 +343,7 @@ p_activo_cuenta_id IN ACTIVO.CUENTA_ID%TYPE) AS
           Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
           DBMS_OUTPUT.PUT_LINE(Vmensaje);
           INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
-          ROLLBACK;
+          COMMIT;
           RAISE;
         END;
 
@@ -354,7 +354,7 @@ p_activo_cuenta_id IN ACTIVO.CUENTA_ID%TYPE) AS
             Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
-            ROLLBACK;
+            COMMIT;
             RAISE;
         END;
 END P_ASOCIAR_ACTIVO_A_PRODUCTO;
@@ -397,7 +397,7 @@ p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) AS
           Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
           DBMS_OUTPUT.PUT_LINE(Vmensaje);
           INSERT INTO TRAZA VALUES(SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
-          ROLLBACK;
+          COMMIT;
           RAISE;
         END;
 END P_ELIMINAR_PRODUCTO_Y_ASOCIACIONES;
