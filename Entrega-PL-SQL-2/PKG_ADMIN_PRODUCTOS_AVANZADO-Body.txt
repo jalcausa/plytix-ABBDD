@@ -13,9 +13,10 @@ FUNCTION  F_VALIDAR_PLAN_SUFICIENTE(p_cuenta_id IN CUENTA.ID%TYPE) RETURN VARCHA
     v_count_cat_activos       NUMBER;
     v_count_relaciones        NUMBER;
     
-  BEGIN
+BEGIN
     
     v_plan := PKG_ADMIN_PRODUCTOS.F_OBTENER_PLAN_CUENTA(p_cuenta_id);
+
     -- Contar productos
     SELECT COUNT(*)
     INTO v_count_productos
@@ -160,13 +161,10 @@ PROCEDURE P_MIGRAR_PRODUCTOS_A_CATEGORIA(
         
     v_aux NUMBER;
 BEGIN
-    -- Verificamos que la cuenta existe
-    BEGIN
-        SELECT 1 INTO v_aux FROM cuenta WHERE id = p_cuenta_id;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            RAISE NO_DATA_FOUND;
-    END;
+    -- Verificar que el usuario tiene acceso a la cuenta
+    IF PKG_ADMIN_PRODUCTOS.F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
+        RAISE PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA;
+    END IF;
 
     -- Verificamos que categoria_origen existe y que está asociada a nuestra cuenta
     BEGIN
@@ -207,6 +205,11 @@ BEGIN
         END;
     END LOOP;
 EXCEPTION
+    WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
+        INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Acceso denegado a la cuenta: ' || p_cuenta_id);
+        COMMIT;
+        RAISE;
+
     WHEN NO_DATA_FOUND THEN
         ROLLBACK;
         DECLARE
@@ -214,6 +217,7 @@ EXCEPTION
         BEGIN
             v_mensaje := 'P_MIGRAR_PRODUCTOS_A_CATEGORIA: NO_DATA_FOUND - Entidad no encontrada. CuentaID: ' || p_cuenta_id || ', OrigenID: ' || p_categoria_origen_id || ', DestinoID: ' || p_categoria_destino_id;
             INSERT INTO traza VALUES (SYSDATE, USER, 'P_MIGRAR_PRODUCTOS_A_CATEGORIA', v_mensaje);
+            COMMIT;
         END;
         RAISE;
 
@@ -240,15 +244,40 @@ AS
     
     v_existe NUMBER;
 BEGIN
-    -- Comprobar que el producto origen existe (lanza por defecto NO_DATA_FOUND)
-    SELECT 1 INTO v_existe
-    FROM PRODUCTO
-    WHERE GTIN = p_producto_gtin_origen AND CUENTA_ID = p_cuenta_id;
+    -- Verificar que el usuario tiene acceso a la cuenta
+    IF PKG_ADMIN_PRODUCTOS.F_USUARIO_ACCESO_CUENTA(USER, p_cuenta_id) = 0 THEN
+        RAISE PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA;
+    END IF;
 
-    -- Comprobar que el producto destino existe (lanza por defecto NO_DATA_FOUND)
-    SELECT 1 INTO v_existe
-    FROM PRODUCTO
-    WHERE GTIN = p_producto_gtin_destino AND CUENTA_ID = p_cuenta_id;
+    BEGIN
+        -- Comprobar que el producto origen existe (lanza por defecto NO_DATA_FOUND)
+        SELECT 1 INTO v_existe
+        FROM PRODUCTO
+        WHERE GTIN = p_producto_gtin_origen AND CUENTA_ID = p_cuenta_id;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            DECLARE
+                v_mensaje VARCHAR2(500);
+            BEGIN
+                v_mensaje := 'P_REPLICAR_ATRIBUTOS: No encontrado producto origen con GTIN ' || p_producto_gtin_origen;
+                INSERT INTO traza VALUES (SYSDATE, USER, 'P_REPLICAR_ATRIBUTOS', v_mensaje);
+            END;
+    END;
+
+    BEGIN
+        -- Comprobar que el producto destino existe (lanza por defecto NO_DATA_FOUND)
+        SELECT 1 INTO v_existe
+        FROM PRODUCTO
+        WHERE GTIN = p_producto_gtin_destino AND CUENTA_ID = p_cuenta_id;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            DECLARE
+                v_mensaje VARCHAR2(500);
+            BEGIN
+                v_mensaje := 'P_REPLICAR_ATRIBUTOS: No encontrado producto destino con GTIN ' || p_producto_gtin_destino;
+                INSERT INTO traza VALUES (SYSDATE, USER, 'P_REPLICAR_ATRIBUTOS', v_mensaje);
+            END;
+    END;
 
     -- Iterar sobre los atributos del producto origen
     FOR r IN c_atributos_origen LOOP
@@ -279,6 +308,10 @@ BEGIN
     END LOOP;
     COMMIT;
 EXCEPTION
+    WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
+
+
+
     WHEN OTHERS THEN
         DECLARE
             Vmensaje VARCHAR2(500);
