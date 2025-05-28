@@ -276,11 +276,6 @@ END P_ACTUALIZAR_NOMBRE_PRODUCTO;
 
 -------------------------------------------------------------------------------------------------------------
 -- Procedimiento auxiliar
-/*
- * Procedimiento auxiliar utilizado por el job J_ACTUALIZA_PRODUCTOS, que a su
- * vez se apoya en el procedimiento que se de define en el ejercicio 8 de la
- * primera relacion de PL/SQL, P_ACTUALIZAR_PRODUCTOS
- */
 -------------------------------------------------------------------------------------------------------------
 PROCEDURE P_ACTUALIZAR_TODAS_CUENTAS AS
     CURSOR c_cuentas IS SELECT id FROM cuenta;
