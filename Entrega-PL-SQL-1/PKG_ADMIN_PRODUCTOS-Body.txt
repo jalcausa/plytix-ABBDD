@@ -55,6 +55,7 @@ FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYP
             Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+			COMMIT;
             RAISE;
         END;
   END F_OBTENER_PLAN_CUENTA;
@@ -89,6 +90,7 @@ FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER 
             Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+			COMMIT;
             RAISE;
         END;
   END F_CONTAR_PRODUCTOS_CUENTA;
@@ -145,6 +147,7 @@ p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) RETURN BOOLEAN AS
             Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+			COMMIT;
             RAISE;
         END;
   END F_VALIDAR_ATRIBUTOS_PRODUCTO;
@@ -182,11 +185,13 @@ FUNCTION F_NUM_CATEGORIAS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
         WHEN NO_DATA_FOUND THEN
             INSERT INTO traza
             VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Cuenta no encontrada: ' || p_cuenta_id);
+            COMMIT;
             RAISE;
 
         WHEN EXCEPTION_SIN_ACCESO_CUENTA THEN
             INSERT INTO traza
             VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Acceso denegado a la cuenta: ' || p_cuenta_id);
+            COMMIT;
             RAISE;
 
         WHEN OTHERS THEN
@@ -196,6 +201,7 @@ FUNCTION F_NUM_CATEGORIAS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
                 v_mensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
                 INSERT INTO traza
                 VALUES (SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
+                COMMIT;
                 RAISE;
             END;
   END F_NUM_CATEGORIAS_CUENTA;
@@ -230,30 +236,39 @@ PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_
         UPDATE producto 
         SET nombre = p_nuevo_nombre
         WHERE gtin = p_producto_gtin AND cuenta_id = p_cuenta_id;
+        COMMIT;
 
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
+            ROLLBACK;
             INSERT INTO traza
             VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Producto no encontrado con GTIN: ' || p_producto_gtin || ' y cuenta: ' || p_cuenta_id);
+            COMMIT;
             RAISE;
 
         WHEN INVALID_DATA THEN
+            ROLLBACK;
             INSERT INTO traza
             VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Nombre inválido para producto: NULL o vacío');
+            COMMIT;            
             RAISE;
 
         WHEN EXCEPTION_SIN_ACCESO_CUENTA THEN
+            ROLLBACK;
             INSERT INTO traza
             VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Acceso denegado a la cuenta: ' || p_cuenta_id);
+            COMMIT;
             RAISE;
 
         WHEN OTHERS THEN
             DECLARE
                 v_mensaje VARCHAR2(500);
             BEGIN
+                ROLLBACK;
                 v_mensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
                 INSERT INTO traza
                 VALUES (SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
+                COMMIT;
                 RAISE;
             END;
   END P_ACTUALIZAR_NOMBRE_PRODUCTO;
@@ -278,6 +293,7 @@ BEGIN
                 v_mensaje := 'Error en cuenta ' || TO_CHAR(r.id) || ': ' || SQLERRM;
                 INSERT INTO traza (fecha, usuario, causante, descripcion)
                 VALUES (SYSDATE, USER, 'P_ACTUALIZAR_TODAS_CUENTAS', v_mensaje);
+                COMMIT;
         END;
     END LOOP;
 END P_ACTUALIZAR_TODAS_CUENTAS;
@@ -327,7 +343,7 @@ p_activo_cuenta_id IN ACTIVO.CUENTA_ID%TYPE) AS
           Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
           DBMS_OUTPUT.PUT_LINE(Vmensaje);
           INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
-          ROLLBACK;
+          COMMIT;
           RAISE;
         END;
 
@@ -338,7 +354,7 @@ p_activo_cuenta_id IN ACTIVO.CUENTA_ID%TYPE) AS
             Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
-            ROLLBACK;
+            COMMIT;
             RAISE;
         END;
 END P_ASOCIAR_ACTIVO_A_PRODUCTO;
@@ -381,7 +397,7 @@ p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) AS
           Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
           DBMS_OUTPUT.PUT_LINE(Vmensaje);
           INSERT INTO TRAZA VALUES(SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
-          ROLLBACK;
+          COMMIT;
           RAISE;
         END;
 END P_ELIMINAR_PRODUCTO_Y_ASOCIACIONES;
