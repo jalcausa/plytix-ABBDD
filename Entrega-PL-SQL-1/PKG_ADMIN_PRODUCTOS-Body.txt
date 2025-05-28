@@ -93,6 +93,11 @@ FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER 
 
         RETURN v_count;    
     EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Cuenta no encontrada con ID: ' || p_cuenta_id);
+        COMMIT;
+        RAISE;
+
     WHEN OTHERS THEN
         DECLARE
             Vmensaje varchar2(500);
@@ -100,6 +105,7 @@ FUNCTION F_CONTAR_PRODUCTOS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER 
             Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+            COMMIT;
             RAISE;
         END;
   END F_CONTAR_PRODUCTOS_CUENTA;
