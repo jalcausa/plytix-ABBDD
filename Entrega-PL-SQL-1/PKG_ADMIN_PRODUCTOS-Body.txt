@@ -53,6 +53,11 @@ FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYP
         COMMIT;
         RAISE;
 
+    WHEN EXCEPTION_PLAN_NO_ASIGNADO THEN
+        INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Plan no encontrado para la cuenta con ID: ' || p_cuenta_id);
+        COMMIT;
+        RAISE;        
+
     WHEN OTHERS THEN
         DECLARE
             Vmensaje varchar2(500);
@@ -60,6 +65,7 @@ FUNCTION F_OBTENER_PLAN_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN PLAN%ROWTYP
             Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+            COMMIT;
             RAISE;
         END;
   END F_OBTENER_PLAN_CUENTA;

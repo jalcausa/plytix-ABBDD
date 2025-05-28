@@ -13,10 +13,10 @@ create or replace PACKAGE PKG_ADMIN_PRODUCTOS AS
   --   Verifica si un usuario tiene acceso a una cuenta concreta.
   --   El acceso se concede si:
   --     - Existe una fila en la tabla USUARIO con ese nombre de usuario y cuenta, o
-  --     - El nombre de usuario comienza por 'PLYTIX' (acceso administrativo).
+  --     - El nombre de usuario es 'PLYTIX'.
   -- Parámetros:
-  --   - p_nombreusuario (IN): Nombre del usuario a verificar.
-  --   - p_cuenta_id (IN): ID de la cuenta a la que se desea acceder.
+  --   - p_nombreusuario (USUARIO.NOMBREUSUARIO%TYPE): Nombre del usuario a verificar.
+  --   - p_cuenta_id (CUENTA.ID%TYPE): ID de la cuenta a la que se desea acceder.
   -- Devuelve:
   --   - NUMBER: 1 si el usuario tiene acceso, 0 en caso contrario.
   ------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ create or replace PACKAGE PKG_ADMIN_PRODUCTOS AS
   --     - Cuenta cuántos productos están asociados a dicha cuenta.
   --   En caso de error, registra la traza en la tabla TRAZA y relanza la excepción.
   -- Parámetros:
-  --   - p_cuenta_id (IN): ID de la cuenta cuyos productos se desean contar.
+  --   - p_cuenta_id (CUENTA.ID%TYPE): ID de la cuenta cuyos productos se desean contar.
   -- Devuelve:
   --   - NUMBER: Número total de productos asociados a la cuenta.
   ------------------------------------------------------------------------------
