@@ -162,6 +162,7 @@ p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) RETURN BOOLEAN AS
             Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+            COMMIT;
             RAISE;
         END;
   END F_VALIDAR_ATRIBUTOS_PRODUCTO;
@@ -176,10 +177,10 @@ FUNCTION F_NUM_CATEGORIAS_CUENTA(p_cuenta_id IN CUENTA.ID%TYPE) RETURN NUMBER AS
     WHERE cuenta_id = p_cuenta_id;
 
     v_num_categorias_cuenta NUMBER := 0;
-    v_dummy NUMBER;
+    v_existe NUMBER;
 BEGIN
     -- Verificar que la cuenta existe
-    SELECT 1 INTO v_dummy
+    SELECT 1 INTO v_existe
     FROM cuenta
     WHERE id = p_cuenta_id;
 
@@ -197,14 +198,12 @@ BEGIN
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        INSERT INTO traza
-        VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Cuenta no encontrada: ' || p_cuenta_id);
+        INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Cuenta no encontrada: ' || p_cuenta_id);
         COMMIT;
         RAISE;
 
     WHEN EXCEPTION_SIN_ACCESO_CUENTA THEN
-        INSERT INTO traza
-        VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Acceso denegado a la cuenta: ' || p_cuenta_id);
+        INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Acceso denegado a la cuenta: ' || p_cuenta_id);
         COMMIT;
         RAISE;
 
@@ -213,8 +212,7 @@ EXCEPTION
             v_mensaje VARCHAR2(500);
         BEGIN
             v_mensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
-            INSERT INTO traza
-            VALUES (SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
+            INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
             COMMIT;
             RAISE;
         END;
@@ -224,7 +222,7 @@ END F_NUM_CATEGORIAS_CUENTA;
 -- Ejercicio 5
 -------------------------------------------------------------------------------------------------------------
 PROCEDURE P_ACTUALIZAR_NOMBRE_PRODUCTO(p_producto_gtin IN PRODUCTO.GTIN%TYPE, p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE, p_nuevo_nombre IN PRODUCTO.NOMBRE%TYPE) AS
-    v_dummy NUMBER;
+    v_existe NUMBER;
 BEGIN
 
     -- Validacion del nombre
@@ -233,7 +231,7 @@ BEGIN
     END IF;
         
     /*
-     * TRIM(' ') -> '', que oracle
+     * TRIM(' ') da lugar a '', que oracle
      * convierte a null automaticamente
      */
 
@@ -243,33 +241,31 @@ BEGIN
     END IF;
 
     -- Verificar que el producto existe (lanza NO_DATA_FOUND si no existe)
-    SELECT 1 INTO v_dummy
+    SELECT 1 INTO v_existe
     FROM PRODUCTO
     WHERE gtin = p_producto_gtin AND cuenta_id = p_cuenta_id;
 
     UPDATE producto 
     SET nombre = p_nuevo_nombre
     WHERE gtin = p_producto_gtin AND cuenta_id = p_cuenta_id;
+    COMMIT;
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
         ROLLBACK;
-        INSERT INTO traza
-        VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Producto no encontrado con GTIN: ' || p_producto_gtin || ' y cuenta: ' || p_cuenta_id);
+        INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Producto no encontrado con GTIN: ' || p_producto_gtin || ' y cuenta: ' || p_cuenta_id);
         COMMIT;
         RAISE;
 
     WHEN INVALID_DATA THEN
         ROLLBACK;
-        INSERT INTO traza
-        VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Nombre inválido para producto: NULL o vacío');
+        INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Nombre inválido para producto: NULL o vacío');
         COMMIT;
         RAISE;
 
     WHEN EXCEPTION_SIN_ACCESO_CUENTA THEN
         ROLLBACK;
-        INSERT INTO traza
-        VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Acceso denegado a la cuenta: ' || p_cuenta_id);
+        INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Acceso denegado a la cuenta: ' || p_cuenta_id);
         COMMIT;
         RAISE;
 
@@ -279,8 +275,7 @@ EXCEPTION
         BEGIN
             ROLLBACK;
             v_mensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
-            INSERT INTO traza
-            VALUES (SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
+            INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
             COMMIT;
             RAISE;
         END;
@@ -295,12 +290,15 @@ PROCEDURE P_ACTUALIZAR_TODAS_CUENTAS AS
 BEGIN
     FOR r IN c_cuentas LOOP
         BEGIN
+            -- Este procedimiento hace commit 
+            -- cada vez que se ejecuta
             P_ACTUALIZAR_PRODUCTOS(r.id);
         EXCEPTION
             WHEN OTHERS THEN
                 v_mensaje := 'Error en cuenta ' || TO_CHAR(r.id) || ': ' || SQLERRM;
                 INSERT INTO traza (fecha, usuario, causante, descripcion)
                 VALUES (SYSDATE, USER, 'P_ACTUALIZAR_TODAS_CUENTAS', v_mensaje);
+                COMMIT;
         END;
     END LOOP;
 END P_ACTUALIZAR_TODAS_CUENTAS;
@@ -340,30 +338,33 @@ p_activo_cuenta_id IN ACTIVO.CUENTA_ID%TYPE) AS
       -- Insertar la nueva asociación
       INSERT INTO PRODUCTO_ACTIVO(PRODUCTO_GTIN, PRODUCTO_CUENTA_ID, ACTIVO_ID, 
       ACTIVO_CUENTA_ID) VALUES (p_producto_gtin, p_producto_cuenta_id, p_activo_id, p_activo_cuenta_id);
+
       COMMIT;
 
-      EXCEPTION
+    EXCEPTION
         WHEN EXCEPTION_ASOCIACION_DUPLICADA THEN
-         DECLARE
-           Vmensaje VARCHAR2(500);
-          BEGIN
-          Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
-          DBMS_OUTPUT.PUT_LINE(Vmensaje);
-          INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
-          ROLLBACK;
-          RAISE;
-        END;
+            DECLARE
+                Vmensaje VARCHAR2(500);
+            BEGIN
+                ROLLBACK;
+                Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
+                DBMS_OUTPUT.PUT_LINE(Vmensaje);
+                INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
+                COMMIT;
+                RAISE;
+            END;
 
         WHEN OTHERS THEN
-          DECLARE
-            Vmensaje VARCHAR2(500);
-          BEGIN
-            Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
-            DBMS_OUTPUT.PUT_LINE(Vmensaje);
-            INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
-            ROLLBACK;
-            RAISE;
-        END;
+            DECLARE
+                Vmensaje VARCHAR2(500);
+            BEGIN
+                ROLLBACK;
+                Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
+                DBMS_OUTPUT.PUT_LINE(Vmensaje);
+                INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
+                COMMIT;
+                RAISE;
+            END;
 END P_ASOCIAR_ACTIVO_A_PRODUCTO;
 
 -------------------------------------------------------------------------------------------------------------
@@ -395,24 +396,26 @@ p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE) AS
       -- Eliminar el producto
       DELETE FROM PRODUCTO
       WHERE GTIN = p_producto_gtin AND CUENTA_ID = p_cuenta_id;
-      COMMIT;
-    EXCEPTION
-      WHEN NO_DATA_FOUND THEN
-        INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Producto no encontrado con GTIN: ' || p_producto_gtin);
-        COMMIT;
-        RAISE;
 
-      WHEN OTHERS THEN
-        DECLARE
-          Vmensaje VARCHAR2(500);
-        BEGIN
-          ROLLBACK;
-          Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
-          DBMS_OUTPUT.PUT_LINE(Vmensaje);
-          INSERT INTO TRAZA VALUES(SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
-          COMMIT;
-          RAISE;
-        END;
+      COMMIT;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Producto no encontrado con GTIN: ' || p_producto_gtin);
+            COMMIT;
+            RAISE;
+
+        WHEN OTHERS THEN
+            DECLARE
+                Vmensaje VARCHAR2(500);
+            BEGIN
+                ROLLBACK;
+                Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
+                DBMS_OUTPUT.PUT_LINE(Vmensaje);
+                INSERT INTO TRAZA VALUES(SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
+                COMMIT;
+                RAISE;
+            END;
 END P_ELIMINAR_PRODUCTO_Y_ASOCIACIONES;
 
 -------------------------------------------------------------------------------------------------------------
@@ -455,7 +458,6 @@ BEGIN
             END LOOP;
         END IF;
     END LOOP;
-    COMMIT;
 
     -- Ahora queremos borrar todos los elementos de PRODUCTOS que no estén en PRODUCTOS_EXT
     FOR r IN c_productos LOOP
@@ -469,6 +471,7 @@ BEGIN
             P_ELIMINAR_PRODUCTO_Y_ASOCIACIONES(r.gtin, p_cuenta_id);
         END IF;
     END LOOP;
+
     COMMIT;
 EXCEPTION
     WHEN EXCEPTION_SIN_ACCESO_CUENTA THEN
@@ -533,6 +536,7 @@ EXCEPTION
         DECLARE
             v_mensaje VARCHAR2(500);
         BEGIN
+            ROLLBACK;
             v_mensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
             INSERT INTO traza VALUES(SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
             COMMIT;

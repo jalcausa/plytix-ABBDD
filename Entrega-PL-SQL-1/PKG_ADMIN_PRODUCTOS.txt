@@ -96,8 +96,8 @@ create or replace PACKAGE PKG_ADMIN_PRODUCTOS AS
   --   Devuelve TRUE si todos los atributos tienen valores, FALSE en caso contrario.
   --   Registra errores en la tabla TRAZA en caso de excepción.
   -- Parámetros:
-  --   - p_producto_gtin (IN): Código GTIN del producto.
-  --   - p_cuenta_id (IN): ID de la cuenta a la que pertenece el producto.
+  --   - p_producto_gtin (PRODUCTO.GTIN%TYPE): Código GTIN del producto.
+  --   - p_cuenta_id (PRODUCTO.CUENTA_ID%TYPE): ID de la cuenta a la que pertenece el producto.
   -- Devuelve:
   --   - BOOLEAN: TRUE si el producto tiene todos los atributos cubiertos, FALSE si no.
   ------------------------------------------------------------------------------

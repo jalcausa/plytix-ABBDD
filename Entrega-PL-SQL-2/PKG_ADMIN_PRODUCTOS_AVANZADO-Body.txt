@@ -71,6 +71,7 @@ BEGIN
             Vmensaje := SUBSTR( SQLCODE||' '|| SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             insert into traza values (sysdate,user, $$PLSQL_UNIT,Vmensaje);
+            COMMIT;
             RAISE;
         END;
   END F_VALIDAR_PLAN_SUFICIENTE;
@@ -82,7 +83,7 @@ BEGIN
         p_producto_gtin IN PRODUCTO.GTIN%TYPE, 
         p_cuenta_id IN PRODUCTO.CUENTA_ID%TYPE
     ) RETURN VARCHAR2 AS
-        v_dummy NUMBER;
+        v_existe NUMBER;
         v_categorias VARCHAR2(4000);
         v_categoria categoria.nombre%TYPE;
         v_mensaje VARCHAR2(500);
@@ -103,7 +104,7 @@ BEGIN
         END IF;
 
         -- Verificar que el producto existe
-        SELECT 1 INTO v_dummy
+        SELECT 1 INTO v_existe
         FROM producto
         WHERE gtin = p_producto_gtin AND cuenta_id = p_cuenta_id;
 
@@ -130,13 +131,14 @@ BEGIN
         WHEN NO_DATA_FOUND THEN
             INSERT INTO traza
             VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Producto con gtin: ' || p_producto_gtin || ' y cuenta con id asociada: ' || p_cuenta_id || ' no encontrado');
+            COMMIT;
             RAISE;
 
         WHEN OTHERS THEN
             BEGIN
                 v_mensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
-                INSERT INTO traza
-                VALUES (SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
+                INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, v_mensaje);
+                COMMIT;
                 RAISE;
             END;
     END F_LISTA_CATEGORIAS_PRODUCTO;
@@ -189,13 +191,18 @@ BEGIN
 
     -- Actualizamos la categoría de los productos
     FOR prod_rec IN c_productos_a_migrar LOOP
+        -- Gracias al SAVEPOINT, podemos continuar con la transaccion
+        -- a pesar de haber sufrido algun error en el proceso
+        SAVEPOINT antes_de_actualizar;
+
         BEGIN
             UPDATE producto_categoria
             SET categoria_id = p_categoria_destino_id
             WHERE CURRENT OF c_productos_a_migrar;
+
         EXCEPTION
             WHEN DUP_VAL_ON_INDEX THEN -- En caso de que ya se encuentre dicho producto en la categoría destino, no podríamos modificar categoria_id a una ya existente
-                ROLLBACK;
+                ROLLBACK TO antes_de_actualizar;
                 DECLARE
                     v_mensaje VARCHAR2(500);
                 BEGIN
@@ -204,6 +211,9 @@ BEGIN
                 END;
         END;
     END LOOP;
+
+    COMMIT;
+
 EXCEPTION
     WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
         INSERT INTO traza VALUES (SYSDATE, USER, $$PLSQL_UNIT, 'Acceso denegado a la cuenta: ' || p_cuenta_id);
@@ -228,6 +238,7 @@ EXCEPTION
         BEGIN
             v_mensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
             INSERT INTO traza VALUES (SYSDATE, USER, 'P_MIGRAR_PRODUCTOS_A_CATEGORIA', v_mensaje);
+            COMMIT;
         END;
         RAISE;
 END P_MIGRAR_PRODUCTOS_A_CATEGORIA;
@@ -261,6 +272,8 @@ BEGIN
             BEGIN
                 v_mensaje := 'P_REPLICAR_ATRIBUTOS: No encontrado producto origen con GTIN ' || p_producto_gtin_origen;
                 INSERT INTO traza VALUES (SYSDATE, USER, 'P_REPLICAR_ATRIBUTOS', v_mensaje);
+                COMMIT;
+                RAISE;
             END;
     END;
 
@@ -276,6 +289,8 @@ BEGIN
             BEGIN
                 v_mensaje := 'P_REPLICAR_ATRIBUTOS: No encontrado producto destino con GTIN ' || p_producto_gtin_destino;
                 INSERT INTO traza VALUES (SYSDATE, USER, 'P_REPLICAR_ATRIBUTOS', v_mensaje);
+                COMMIT;
+                RAISE;
             END;
     END;
 
@@ -306,23 +321,21 @@ BEGIN
                 p_producto_gtin_destino, r.ATRIBUTO_ID, p_cuenta_id, r.ATRIBUTO_CUENTA_ID);
         END;
     END LOOP;
+
     COMMIT;
+
 EXCEPTION
-    WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
-
-
-
     WHEN OTHERS THEN
         DECLARE
             Vmensaje VARCHAR2(500);
         BEGIN
+            ROLLBACK;
             Vmensaje := SUBSTR(SQLCODE || ' ' || SQLERRM, 1, 500);
             DBMS_OUTPUT.PUT_LINE(Vmensaje);
             INSERT INTO TRAZA VALUES (SYSDATE, USER, $$PLSQL_UNIT, Vmensaje);
-            ROLLBACK;
+            COMMIT;
             RAISE;
         END;
 END P_REPLICAR_ATRIBUTOS;
-
 
 END PKG_ADMIN_PRODUCTOS_AVANZADO;
