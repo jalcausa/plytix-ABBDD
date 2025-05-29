@@ -157,13 +157,12 @@ PROCEDURE P_MIGRAR_PRODUCTOS_A_CATEGORIA(
     -- Cursor que selecciona los productos en la categoría de origen que serán migrados
     -- Bloquea las filas seleccionadas en PRODUCTO_CATEGORIA para evitar modificaciones concurrentes.
     CURSOR c_productos_a_migrar IS
-        SELECT pc.producto_gtin
+        SELECT pc.ROWID AS row_id, pc.producto_gtin
         FROM producto_categoria pc
         WHERE pc.categoria_id = p_categoria_origen_id       -- Nos aseguramos de que partimos de categoria_origen
           AND pc.categoria_cuenta_id = p_cuenta_id          -- Nos aseguramos de que la categoría pertenece a la cuenta dada
-          AND pc.producto_cuenta_id = p_cuenta_id           -- Nos aseguramos de que el producto también pertenece a esa cuenta
-        FOR UPDATE OF pc.categoria_id;                      -- Bloqueamos la modificación de las filas
-        
+          AND pc.producto_cuenta_id = p_cuenta_id;          -- Nos aseguramos de que el producto también pertenece a esa cuenta
+
     v_aux NUMBER;
 BEGIN
     -- Verificar que el usuario tiene acceso a la cuenta
@@ -172,20 +171,10 @@ BEGIN
     END IF;
 
     -- Verificamos que categoria_origen existe y que está asociada a nuestra cuenta
-    BEGIN
-        SELECT 1 INTO v_aux FROM categoria WHERE id = p_categoria_origen_id AND cuenta_id = p_cuenta_id;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            RAISE NO_DATA_FOUND;
-    END;
+    SELECT 1 INTO v_aux FROM categoria WHERE id = p_categoria_origen_id AND cuenta_id = p_cuenta_id;
 
     -- Verificamos que categoria_destino existe y que está asociada a nuestra cuenta
-    BEGIN
-        SELECT 1 INTO v_aux FROM categoria WHERE id = p_categoria_destino_id AND cuenta_id = p_cuenta_id;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            RAISE NO_DATA_FOUND;
-    END;
+    SELECT 1 INTO v_aux FROM categoria WHERE id = p_categoria_destino_id AND cuenta_id = p_cuenta_id;
 
     -- Comprobamos si categoria_origen == categoria_destino, en cuyo caso no habrá que hacer nada
     IF (p_categoria_origen_id = p_categoria_destino_id) THEN
@@ -201,7 +190,7 @@ BEGIN
         BEGIN
             UPDATE producto_categoria
             SET categoria_id = p_categoria_destino_id
-            WHERE CURRENT OF c_productos_a_migrar;
+            WHERE ROWID = prod_rec.row_id;
 
         EXCEPTION
             WHEN DUP_VAL_ON_INDEX THEN -- En caso de que ya se encuentre dicho producto en la categoría destino, no podríamos modificar categoria_id a una ya existente
