@@ -10,6 +10,7 @@ BEGIN
     -- Creamos una cuenta de prueba
     INSERT INTO cuenta VALUES (9999, 'Cuenta de prueba', 'Calle Prueba', 'NIFPRUEBA', SYSDATE, NULL, 1);
     v_cuenta_id := 9999;
+    INSERT INTO USUARIO (id, nombreusuario, nombrecompleto, avatar, email, telefono, cuenta_id) VALUES (500, USER, 'Alberto Ramirez', NULL, 'correoprueba9999@gmail.com', '+34 626 49 94 93', 9999);
 
     -- Creamos dos categorías de prueba
     INSERT INTO categoria(id, cuenta_id, nombre) VALUES (1001, v_cuenta_id, 'Categoría origen');
@@ -72,7 +73,20 @@ BEGIN
         END IF;
     END;
 
-    -- Limpieza (rollback si estamos en modo prueba)
-    ROLLBACK;
+    -- Deshacemos todos los cambios
+    DELETE FROM USUARIO WHERE id = 500;
+    DELETE FROM PRODUCTO_CATEGORIA WHERE producto_gtin = 9001;
+    DELETE FROM CATEGORIA WHERE id IN (1001, 1002);
+    DELETE FROM PRODUCTO WHERE gtin = 9001;
+    DELETE FROM CUENTA WHERE id = 9999;
+EXCEPTION
+    WHEN PKG_ADMIN_PRODUCTOS.EXCEPTION_SIN_ACCESO_CUENTA THEN
+        DBMS_OUTPUT.PUT_LINE('Error accediendo a la cuenta con id ' || v_cuenta_id || '. ' || SQLERRM);
+    
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Error accediendo a los datos: ' || SQLERRM);
+        
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error insertando resultado de test: ' || SQLERRM);
 END;
 /
