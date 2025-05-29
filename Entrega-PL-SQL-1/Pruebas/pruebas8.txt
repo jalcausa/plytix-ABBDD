@@ -20,6 +20,7 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Error insertando resultado de test: ' || SQLERRM);
+        ROLLBACK;
 END;
 /
 
