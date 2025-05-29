@@ -623,7 +623,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON V_PRODUCTO_CATEGORIA_STD TO R_USER_STD;
 
 
 
--- EJERCICIO 1e
+-- EJERCICIO 1f
 
 
 
@@ -783,7 +783,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON V_RELACIONADO_STD TO R_USER_STD;
 
 
 
--- EJERCICIO 1f
+-- EJERCICIO 1g
 -- La gestión del CRUD de Atributo está controlada con VPD (para insert usamos un trigger)
 -- Se ha hecho al principio de la practica, arriba del todo
 
