@@ -1,10 +1,20 @@
-# Plytix - Proyecto de Administración de Bases de Datos
+# Plytix Database Administration Project
 
-Este repositorio contiene un proyecto académico de **Administración de Bases de Datos**, desarrollado **desde cero por el equipo**.
+This repository contains a complete university project for the **Database Administration** subject.  
+Everything here was designed and implemented **from scratch by our team**: data model, physical schema, PL/SQL business logic, security controls, auditing, and manual validation scripts.
 
-Incluye modelado E/R, scripts de nivel físico, seguridad/auditoría, paquetes PL/SQL y pruebas manuales en Oracle.
+## Project scope
 
-## Estructura del repositorio
+The work covers the full lifecycle of an Oracle database project:
+
+- Conceptual and E/R modeling
+- Physical design and DDL evolution across multiple versions
+- PL/SQL package development (base and advanced)
+- Background automation with Oracle jobs
+- Security hardening (roles, permissions, row-level controls, encryption, and auditing)
+- Manual SQL-based testing
+
+## Repository structure
 
 ```text
 .
@@ -35,7 +45,7 @@ Incluye modelado E/R, scripts de nivel físico, seguridad/auditoría, paquetes P
 │   ├── Jobs/
 │   │   ├── create_job_actualiza_productos.sql
 │   │   └── create_job_limpia_traza.sql
-│   ├── Paquetes/ (copias en .txt)
+│   ├── Paquetes/ (package copies in .txt)
 │   └── Pruebas/ (pruebas1.sql ... pruebas4.sql)
 ├── Seguridad/
 │   └── Seguridad.txt
@@ -44,42 +54,85 @@ Incluye modelado E/R, scripts de nivel físico, seguridad/auditoría, paquetes P
 └── RubricaPlitix.xlsx
 ```
 
-## Contenido por bloques
+## What each block teaches
 
-### 1) Nivel físico - Parte 1
-- Evolución del esquema de base de datos en varias versiones.
-- Scripts DDL y artefactos de modelado E/R.
+### 1) Physical level - Part 1 (`Entrega-Nivel-Físico-Parte-1`)
+This folder captures schema evolution from early drafts to a more mature DDL version.
 
-### 2) Nivel físico - Parte 2 (seguridad y auditoría)
-- Scripts/versiones centradas en seguridad, control de acceso y auditoría.
-- Incluye el trabajo con cifrado y trazabilidad en las versiones `v1` a `v4`.
+Key learning outcomes:
+- Turning E/R ideas into Oracle tables, constraints, and indexes
+- Managing iterative schema versions and refactoring decisions
+- Understanding the impact of physical design choices on maintainability
 
-### 3) PL/SQL - Parte 1
-- Paquete base `PKG_ADMIN_PRODUCTOS` (especificación + body).
-- Pruebas manuales SQL para validar procedimientos y funciones del paquete.
+### 2) Physical level - Part 2 (`Entrega-Nivel-Físico-Parte-2`)
+Contains extended scripts focused on security and audit-related requirements through different versions.
 
-### 4) PL/SQL - Parte 2
-- Paquete avanzado `PKG_ADMIN_PRODUCTOS_AVANZADO` (spec + body).
-- Scripts para creación de jobs automáticos.
-- Pruebas manuales adicionales.
+Key learning outcomes:
+- Hardening a schema beyond basic DDL
+- Versioning security-related database scripts
+- Connecting administration tasks with compliance concerns
 
-### 5) Seguridad
-- Documento específico de seguridad en `Seguridad/Seguridad.txt`.
+### 3) PL/SQL package foundations (`Entrega-PL-SQL-1`)
+Defines `PKG_ADMIN_PRODUCTOS` (spec + body) and the first battery of manual tests.
 
-## Orden recomendado de revisión/ejecución
+What is practiced in this package:
+- Business-oriented functions and procedures
+- Permission checks at package level (`F_USUARIO_ACCESO_CUENTA`)
+- Data validation and controlled updates/deletions
+- Exception handling with custom exceptions
+- Error traceability with the `TRAZA` table
+- Account/product synchronization logic (`P_ACTUALIZAR_PRODUCTOS`)
 
-1. **Modelo y DDL base**: `Entrega-Nivel-Físico-Parte-1/` (preferiblemente `Version-3/ddl_v3.sql`).
-2. **Seguridad y auditoría**: `Entrega-Nivel-Físico-Parte-2/` y `Seguridad/Seguridad.txt`.
-3. **Paquete PL/SQL base**: `Entrega-PL-SQL-1/`.
-4. **Paquete PL/SQL avanzado + jobs**: `Entrega-PL-SQL-2/`.
-5. **Pruebas manuales**: scripts en `Pruebas/` de ambas entregas PL/SQL.
+### 4) Advanced PL/SQL and automation (`Entrega-PL-SQL-2`)
+Adds `PKG_ADMIN_PRODUCTOS_AVANZADO`, scheduled jobs, and extra tests.
 
-## Requisitos y forma de uso
+What is practiced in this block:
+- Capacity control against account plans (`F_VALIDAR_PLAN_SUFICIENTE`)
+- Category and attribute utilities (`F_LISTA_CATEGORIAS_PRODUCTO`, `P_REPLICAR_ATRIBUTOS`)
+- Controlled migrations with transaction techniques (`SAVEPOINT`, rollback paths)
+- Oracle job scheduling for recurrent maintenance:
+  - `create_job_actualiza_productos.sql`
+  - `create_job_limpia_traza.sql`
 
-- Proyecto orientado a **Oracle Database** (ejecución manual de scripts SQL/PLSQL).
-- No hay pipeline de build/lint/test automatizado en el repositorio.
-- Las validaciones se realizan ejecutando los scripts de prueba incluidos.
+### 5) Security and auditing references (`Seguridad`)
+`Seguridad/Seguridad.txt` includes examples such as:
+- TDE-style encrypted columns (e.g., phone encryption)
+- Audit policy creation and activation
+- Querying audit records from `UNIFIED_AUDIT_TRAIL`
 
----
+## Pedagogical summary: knowledge acquired in this project
 
-Si quieres, en una siguiente iteración se puede añadir una guía paso a paso de despliegue (orden exacto de scripts y prerequisitos Oracle) para dejarlo completamente reproducible.
+By building this repository end-to-end, the team practiced:
+
+1. **Database architecture thinking**  
+   Designing entities, relationships, and constraints that support real business operations.
+
+2. **From model to implementation**  
+   Translating conceptual models into Oracle DDL and maintaining multiple script versions.
+
+3. **Robust PL/SQL engineering**  
+   Organizing logic in packages, documenting interfaces, validating inputs, and raising meaningful exceptions.
+
+4. **Data integrity under change**  
+   Updating, migrating, and deleting data safely while protecting referential consistency.
+
+5. **Operational automation**  
+   Using database jobs to run recurring maintenance tasks without manual intervention.
+
+6. **Security by design**  
+   Applying role-based permissions, controlled access patterns, and auditability in database workflows.
+
+7. **Auditing and traceability**  
+   Capturing runtime issues (`TRAZA`) and monitoring sensitive operations through Oracle auditing features.
+
+8. **Professional validation habits**  
+   Designing manual SQL test scripts to verify behavior and edge cases in each delivery.
+
+## How this repository is validated
+
+- Target platform: **Oracle Database**
+- Execution model: manual SQL/PLSQL script execution
+- Test assets: SQL scripts under:
+  - `Entrega-PL-SQL-1/Pruebas/`
+  - `Entrega-PL-SQL-2/Pruebas/`
+- There is no automated CI/lint/build pipeline in this repository
