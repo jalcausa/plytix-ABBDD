@@ -1,206 +1,85 @@
-# Revisión del Trabajo del Grupo
+# Plytix - Proyecto de Administración de Bases de Datos
 
-## 1. ¿Se han creado los siguientes objetos?
+Este repositorio contiene un proyecto académico de **Administración de Bases de Datos**, desarrollado **desde cero por el equipo**.
 
-- ¿Se ha creado un esquema distinto para el trabajo? → <span style="color:red;">SÍ</span>
-- ¿Se han creado índices en la base de datos? → <span style="color:green;">SÍ</span>
-- ¿Se han importado los datos a las tablas Cuentas, Planes, Usuarios, Productos...? → <span style="color:red;">SÍ</span>
-- ¿Se ha añadido una tabla TRAZA y se usa para seguir errores? → <span style="color:red;">SÍ</span>
+Incluye modelado E/R, scripts de nivel físico, seguridad/auditoría, paquetes PL/SQL y pruebas manuales en Oracle.
 
-## 2. Seguridad
+## Estructura del repositorio
 
-- ¿Se ha añadido alguna columna como se indicaba en la práctica de seguridad? → <span style="color:red;">SÍ</span>
-- ¿Se ha aplicado alguna política de autorización VPD? → <span style="color:red;">SÍ</span>
+```text
+.
+├── Entrega-Nivel-Físico-Parte-1/
+│   ├── Version-1/
+│   │   ├── Tarea-1.sql
+│   │   └── Modelo_ER(.dmd)
+│   ├── Version-2-[04-04-2025]/
+│   │   ├── diagSQL.sql
+│   │   └── Diagrama ER/
+│   └── Version-3/
+│       ├── ddl_v3.sql
+│       ├── Tarea-1.txt
+│       ├── Script_borrado.txt
+│       └── ER_v3(.dmd)
+├── Entrega-Nivel-Físico-Parte-2/
+│   ├── v1.txt
+│   ├── v2.txt
+│   ├── v3.txt
+│   └── v4.txt
+├── Entrega-PL-SQL-1/
+│   ├── PKG_ADMIN_PRODUCTOS.sql
+│   ├── PKG_ADMIN_PRODUCTOS-Body.sql
+│   └── Pruebas/ (prueba1.sql ... pruebas9.sql)
+├── Entrega-PL-SQL-2/
+│   ├── PKG_ADMIN_PRODUCTOS_AVANZADO.sql
+│   ├── PKG_ADMIN_PRODUCTOS_AVANZADO-Body.sql
+│   ├── Jobs/
+│   │   ├── create_job_actualiza_productos.sql
+│   │   └── create_job_limpia_traza.sql
+│   ├── Paquetes/ (copias en .txt)
+│   └── Pruebas/ (pruebas1.sql ... pruebas4.sql)
+├── Seguridad/
+│   └── Seguridad.txt
+├── Version 2 [04-04-2025]/
+│   └── Diagrama ER/ (diagLog.pdf, diagrama.dmd)
+└── RubricaPlitix.xlsx
+```
 
-## 3. Vistas
+## Contenido por bloques
 
-- V_PRODUCTO_PUBLICO → <span style="color:red;">SÍ</span>
-- Materializada_VM_PRODUCTOS → <span style="color:red;">SÍ</span>
+### 1) Nivel físico - Parte 1
+- Evolución del esquema de base de datos en varias versiones.
+- Scripts DDL y artefactos de modelado E/R.
 
-## 4. Permisos
+### 2) Nivel físico - Parte 2 (seguridad y auditoría)
+- Scripts/versiones centradas en seguridad, control de acceso y auditoría.
+- Incluye el trabajo con cifrado y trazabilidad en las versiones `v1` a `v4`.
 
-- Gestión de Productos por Usuario Estándar → <span style="color:red;">SÍ</span>
-- Gestión de Productos y Categorías → <span style="color:red;">SÍ</span>
-- Gestión de Productos, Activos entre Productos → <span style="color:red;">SÍ</span>
+### 3) PL/SQL - Parte 1
+- Paquete base `PKG_ADMIN_PRODUCTOS` (especificación + body).
+- Pruebas manuales SQL para validar procedimientos y funciones del paquete.
 
-## 5. Paquetes PL/SQL
+### 4) PL/SQL - Parte 2
+- Paquete avanzado `PKG_ADMIN_PRODUCTOS_AVANZADO` (spec + body).
+- Scripts para creación de jobs automáticos.
+- Pruebas manuales adicionales.
 
-- PKG_ADMIN_PRODUCTOS → <span style="color:red;">SÍ</span>
+### 5) Seguridad
+- Documento específico de seguridad en `Seguridad/Seguridad.txt`.
 
-## 6. Procedimientos (dentro del paquete)
+## Orden recomendado de revisión/ejecución
 
-- F_OBTENER_PLAN_CUENTA → <span style="color:red;">SÍ</span>
-- F_CONTAR_PRODUCTOS_CUENTA → <span style="color:red;">SÍ</span>
-- F_VALIDAR_ATRIBUTOS_PRODUCTO → <span style="color:red;">SÍ</span>
-- F_NUM_CATEGORIAS_CUENTA → <span style="color:red;">SÍ</span>
-- P_ACTUALIZAR_NOMBRE_PRODUCTO → <span style="color:red;">SÍ</span>
-- P_ASOCIAR_ACTIVO_A_PRODUCTO → <span style="color:red;">SÍ</span>
-- P_ELIMINAR_PRODUCTO_Y_ASOCIACIONES → <span style="color:red;">SÍ</span>
-- P_CREAR_USUARIO → <span style="color:red;">SÍ</span>
-- P_ACTUALIZAR_PRODUCTOS → <span style="color:red;">SÍ</span>
+1. **Modelo y DDL base**: `Entrega-Nivel-Físico-Parte-1/` (preferiblemente `Version-3/ddl_v3.sql`).
+2. **Seguridad y auditoría**: `Entrega-Nivel-Físico-Parte-2/` y `Seguridad/Seguridad.txt`.
+3. **Paquete PL/SQL base**: `Entrega-PL-SQL-1/`.
+4. **Paquete PL/SQL avanzado + jobs**: `Entrega-PL-SQL-2/`.
+5. **Pruebas manuales**: scripts en `Pruebas/` de ambas entregas PL/SQL.
 
-## 7. Triggers
+## Requisitos y forma de uso
 
-- TR_PRODUCTOS → <span style="color:red;">SÍ</span>
-
-## 8. Transacciones
-
-- ¿Se han controlado/deshecho las transacciones...? → <span style="color:red;">SÍ</span>
-
-## 9. Excepciones
-
-- ¿Se han controlado excepciones? → <span style="color:red;">SÍ</span>
-
-## 10. ¿Se han probado todas las funcionalidades con datos coherentes?
-
-- ¿Se han insertado datos coherentes? → <span style="color:red;">SÍ</span>
-
-## 11. Seguridad
-
-- ¿Se han creado roles adecuadamente? → <span style="color:red;">SÍ</span>
-- ¿Se han asignado roles a los usuarios? → <span style="color:red;">SÍ</span>
-- ¿Se han aplicado restricciones de forma restrictiva...? → <span style="color:red;">SÍ</span>
-- ¿Se ha activado TDE y encriptado algunas...? → <span style="color:red;">SÍ</span>
+- Proyecto orientado a **Oracle Database** (ejecución manual de scripts SQL/PLSQL).
+- No hay pipeline de build/lint/test automatizado en el repositorio.
+- Las validaciones se realizan ejecutando los scripts de prueba incluidos.
 
 ---
 
-## Opciones para subir la nota:
-
-### 1. Paquetes adicionales
-
-- PKG_ADMIN_PRODUCTOS_AVANZADO → <span style="color:red;">SÍ</span>
-- F_VALIDAR_PLAN_SUFICIENTE → <span style="color:red;">SÍ</span>
-- F_LISTA_CATEGORIAS_PRODUCTO → <span style="color:red;">SÍ</span>
-- P_MIGRAR_PRODUCTOS_A_CATEGORIA → <span style="color:red;">SÍ</span>
-- P_REPLICAR_ATRIBUTOS → <span style="color:red;">SÍ</span>
-- J_LIMPIA_TRAZA → <span style="color:red;">SÍ</span>
-- P_ACTUALIZA_PRODUCTOS → <span style="color:red;">SÍ</span>
-
-### 2. JOBS
-
-- Todos los indicados → <span style="color:red;">SÍ</span>
-
-### 3. Diseño E/R
-
-- ¿Se cumple con restricciones semánticas...? → <span style="color:red;">NO</span>
-
-### 4. Auditoría
-
-- ¿Se han creado restricciones NOT NULL / UNIQUE...? → <span style="color:red;">SÍ</span>
-- ¿Se han hecho auditorías suficientes? → <span style="color:red;">SÍ</span>
-
-### 5. Miscelánea
-
-- ¿Se han introducido (SUFICIENTES) datos para comprobar...? → <span style="color:red;">SÍ</span>
-- ¿Se han tratado correctamente las mayusculas/minusculas en ...? → <span style="color:red;">NO</span>
-- ¿Se han introducido procedimientos/funciones/...? → <span style="color:red;">SÍ</span>
-
-### 6. Contexto
-
-- ¿Se ha utilizado contexto de otras aplicaciones...? → <span style="color:red;">NO</span>
-
----
-
-**Nota total del grupo: 0,00**
-
-# Explicación parte 2 de nivel físico
-
-## **Estructura General de Seguridad**
-
-El script implementa un sistema de seguridad basado en **roles** y **políticas de acceso a nivel de fila (RLS - Row Level Security)** para un sistema llamado Plytix. Se definen 4 tipos de usuarios con diferentes niveles de acceso:
-
-### **1. Roles Creados**
-
-```sql
-CREATE ROLE R_USER_STD;              -- Usuario Estándar
-CREATE ROLE R_GESTOR_CUENTA;         -- Gestor de Cuentas  
-CREATE ROLE R_PLANIFICADOR_SERVICIOS; -- Planificador de Servicios
-```
-
-El **Administrador del Sistema** es el usuario PLYTIX (propietario de las tablas), no necesita rol específico.
-
-## **2. Usuario Estándar (R_USER_STD)**
-
-### **Acceso a su propia información de usuario:**
-- **Vista V_USUARIO**: Solo puede ver y modificar su propio registro
-```sql
-CREATE OR REPLACE VIEW V_USUARIO AS 
-SELECT * FROM USUARIO WHERE UPPER(USUARIO.NOMBREUSUARIO)=USER
-```
-- La condición `WHERE UPPER(USUARIO.NOMBREUSUARIO)=USER` garantiza que solo vea su propio registro
-- Permisos limitados: `SELECT, UPDATE(NOMBRECOMPLETO, AVATAR, EMAIL, TELEFONO)`
-
-### **Acceso a Productos:**
-- **Vista V_PRODUCTO_STD**: Solo productos de su cuenta
-```sql
-WHERE PRODUCTO.CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)
-```
-- **Triggers INSTEAD OF** para operaciones CRUD que:
-  - En INSERT: Asignan automáticamente la CUENTA_ID del usuario actual
-  - En UPDATE/DELETE: Solo permiten modificar productos de su cuenta
-
-### **Acceso a Activos:**
-- **Vista V_ACTIVO_STD**: Solo activos de su cuenta
-- **Triggers similares** que verifican pertenencia a la cuenta del usuario
-- **Vista adicional V_ACTIVO_CATEGORIA_STD** para gestionar relaciones activo-categoría
-
-### **Política de Seguridad VPD para Atributos:**
-```sql
-CREATE OR REPLACE FUNCTION SOLO_USER_ATRIB(...) RETURN VARCHAR2 AS
-BEGIN
-    RETURN 'CUENTA_ID IN (SELECT CUENTA_ID FROM V_USUARIO)';
-END;
-```
-- **Virtual Private Database (VPD)** aplica automáticamente esta condición a SELECT, UPDATE, DELETE
-- Para INSERT usa un **trigger adicional** ya que VPD no cubre esta operación
-
-## **3. Gestor de Cuentas (R_GESTOR_CUENTA)**
-
-### **Acceso completo a tabla CUENTA:**
-```sql
-GRANT SELECT, INSERT, UPDATE, DELETE ON CUENTA TO R_GESTOR_CUENTA;
-```
-
-### **Acceso limitado a información de usuarios:**
-- **Vista V_USUARIO_GESTOR**: Excluye datos sensibles (Email, Teléfono)
-```sql
-SELECT ID, NOMBREUSUARIO, NOMBRECOMPLETO, AVATAR, CUENTA_ID FROM USUARIO;
-```
-- **Trigger de protección** impide eliminar usuarios que son propietarios de cuentas
-
-## **4. Planificador de Servicios (R_PLANIFICADOR_SERVICIOS)**
-
-### **Acceso completo a tabla PLAN:**
-```sql
-GRANT SELECT, INSERT, UPDATE, DELETE ON PLAN TO R_PLANIFICADOR_SERVICIOS;
-```
-
-## **5. Características Especiales de Seguridad**
-
-### **Productos Públicos/Privados:**
-- **Campo PUBLICO** añadido a tabla PRODUCTO (por defecto 'S')
-- **Vista V_PRODUCTO_PUBLICO** para productos públicos accesible a todos
-```sql
-CREATE OR REPLACE VIEW V_PRODUCTO_PUBLICO AS
-SELECT * FROM PRODUCTO WHERE PUBLICO = 'S';
-GRANT SELECT ON V_PRODUCTO_PUBLICO TO PUBLIC;
-```
-
-### **Triggers de Validación:**
-- **Verifican pertenencia a la misma cuenta** antes de crear relaciones
-- **Previenen operaciones no autorizadas** como relacionar productos de diferentes cuentas
-- **Asignación automática de CUENTA_ID** basada en el usuario conectado
-
-### **Sinónimos Públicos:**
-```sql
-CREATE PUBLIC SYNONYM MI_USUARIO FOR V_USUARIO;
-CREATE PUBLIC SYNONYM MIS_PRODUCTOS FOR V_PRODUCTO_STD;
-```
-- Facilitan el acceso a las vistas sin especificar el esquema
-
-## **6. Principios de Seguridad Implementados**
-
-1. **Principio de menor privilegio**: Cada rol solo tiene acceso a lo estrictamente necesario
-2. **Segregación de datos por cuenta**: Los usuarios solo ven datos de su propia cuenta
-3. **Protección de datos sensibles**: El gestor de cuentas no puede ver emails/teléfonos
-4. **Integridad referencial**: Los triggers verifican que las relaciones sean válidas
+Si quieres, en una siguiente iteración se puede añadir una guía paso a paso de despliegue (orden exacto de scripts y prerequisitos Oracle) para dejarlo completamente reproducible.
